@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+    <link rel="icon" type="image/png" href="./logo.png" />
+  <title></title>
+</head>
+<body>
+<script>
+    const docEle = document.documentElement;
+    var windowWidth = window.innerWidth
+    var width = 1200;
+    if(parseInt(windowWidth) < width){
+        docEle.style.minWidth = width + 'px'
+    }else{
+        docEle.style.minWidth = windowWidth + 'px'
+    }
+    window.addEventListener("resize", function () {
+        const docEle = document.documentElement;
+        var windowWidth = window.innerWidth
+        var width = 1200;
+        if(parseInt(windowWidth) < width){
+            docEle.style.minWidth = width + 'px'
+        }else{
+            docEle.style.minWidth = windowWidth + 'px'
+        }
+    })
+    window.config = {
+        // <%=htmlWebpackPlugin.options.env %>API
+        context: "<%=htmlWebpackPlugin.options.address %>",
+        version: "<%=htmlWebpackPlugin.options.version %>"
+    }
+
+    if (!sessionStorage.getItem('userName')) {
+        delCookie('ng')
+    }
+    function delCookie(name){//为了删除指定名称的cookie，可以将其过期时间设定为一个过去的时间
+        var date = new Date();
+        date.setTime(date.getTime() - 10000);
+        document.cookie = name + "=a; expires=" + date.toGMTString();
+    }
+</script>
+
+
+<div id="root"></div>
+<%=htmlWebpackPlugin.files.webpackManifest%>
+</body>
+</html>

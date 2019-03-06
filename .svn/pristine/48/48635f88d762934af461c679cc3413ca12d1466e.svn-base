@@ -1,0 +1,322 @@
+<template>
+    <div class="general-price">
+        <div>
+          <search class="showInline" @searchValue="getSearchValue" :showResetButton="showResetButton" @reset="getReset" :isShowSearchResult="isShowSearchResult" :showPlaceholder="'请输入普通价格政策单号'"></search>
+        </div>
+        <div class="search_result_container" v-if="searchItemValueArray.length>0">
+            <search-result :searchItemValueArray="searchItemValueArray" :count="totalCount" @deleteItem="getDeleteItem"></search-result>
+        </div>
+        <div class="table-wrapper">
+        <el-table
+            ref="multipleTable"
+            :data="tableData"
+            class="setFixedHeight"
+            tooltip-effect="dark"
+            style="width: 100%"
+            @selection-change="handleSelectionChange">
+
+                <el-table-column label="单据号" prop="billNo" min-width="200">
+                    <template slot-scope="scope">
+                        <div v-if="scope.row.status == 0 && scope.row.approveStatus == 0" class="row-btn-show">
+                            <div style="cursor:pointer" class="row-show" @click="$router.push({path: `/goods/manage/viewInfo/${scope.row.id}/${scope.row.billNo}/${scope.row.approveStatus}`})">{{scope.row.billNo}}</div>
+                            <MoreOperatingChannelPrice  @onDelete="deleteThat({id: scope.row.id, billNo: scope.row.billNo})" @onEdit="editTaht(scope.row)" ></MoreOperatingChannelPrice>
+                        </div>
+                        <div v-else class="row-btn-show">
+                            <div style="cursor:pointer" class="row-show" @click="$router.push({path: `/goods/manage/viewInfo/${scope.row.id}/${scope.row.billNo}/${scope.row.approveStatus}`})">{{scope.row.billNo}}</div>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="状态" prop="status" min-width="80">
+                    <template slot-scope="scope">
+                      <el-select @change="changeGeneralPriceStatus(scope.row)"
+                      placeholder="请选择"
+                      ref="select1"
+                      style="width: 100px" size="small" v-model="scope.row.status"
+                      :disabled="scope.row.approveStatus == 0 || scope.row.status== 1" 
+                      >
+                        <el-option :value="0" label="已保存"></el-option>
+                        <el-option :value="1" label="已记账"></el-option>
+                    </el-select>
+                    </template>
+                </el-table-column>                
+                <el-table-column label="审批状态" prop="approveStatus" min-width="80">
+                    <template slot-scope="scope">
+                      <el-select @change="changeGeneralPriceAppStatus(scope.row)"
+                      placeholder="请选择"
+                      ref="select1"
+                      style="width: 100px" size="small" v-model="scope.row.approveStatus"
+                      :disabled="scope.row.approveStatus==1" 
+                      >
+                        <el-option :value="0" label="草稿"></el-option>
+                        <el-option :value="1" label="审批通过"></el-option>
+                    </el-select>
+                    </template>
+                </el-table-column>
+                <el-table-column label="制单人" prop="createUsername" min-width="80"></el-table-column>
+                <el-table-column label="记账人" prop="accountUsername" min-width="80"></el-table-column>
+                <el-table-column label="定价方式" prop="priceFixType" min-width="80">
+                    <template slot-scope="scope">
+                        <div>{{scope.row.priceFixType==0?'统一':'分别'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="备注" prop="remark" min-width="200">
+                  <template slot-scope="scope">
+                      <div>{{scope.row.remark ? scope.row.remark : '--'}}</div>
+                  </template>
+                </el-table-column>
+
+                <div slot="empty" class="table_slot_empty_text">
+                    <div><img src="../../../layouts/images/nodata.png" /></div>
+                    <div>暂无数据</div>
+                </div>
+            </el-table>
+        <div class="pagination">
+            <el-pagination
+                v-if="paginationShow"
+                v-show="tableData.length!=0"
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page.sync="pageNo"
+                :page-sizes="pageSizesList"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="totalCount">
+            </el-pagination>
+        </div>
+        </div>
+    </div>
+</template>
+<script>
+import { mapActions, mapState } from "vuex";
+import PlatformMixins from "~/mixins/platform";
+import TableHeight from "~/mixins/tableheight";
+import Search from "~/components/common/Search";
+import SearchResult from "~/components/common/SearchResult.vue";
+import MoreOperatingChannelPrice from "~/components/common/MoreOperatingChannelPrice";
+
+export default {
+  name: "general-price-list",
+  mixins: [TableHeight, PlatformMixins],
+  components: {
+    Search,
+    SearchResult,
+    MoreOperatingChannelPrice
+  },
+  data() {
+    return {
+      tableData: [], // 表单数据
+      conditionData: [], // 查询表格数据
+      showResetButton: false,
+      isShowSearchResult: false,
+      totalCount: 0,
+      paginationShow: false,
+      cardNumber: "",
+      pageNo: 1, // 当前页
+      pageSizesList: [10, 15, 20, 30, 50],
+      pageSize: 10,
+      billNo: '', // 单据号
+      total: 0, // 总数
+      param: {
+        billNo: "",
+      },
+      searchItemValueArray: [],
+      isClear: false
+    };
+  },
+  props: {operationId: Number},
+  watch: {
+    operationId: function (nval) {
+      this.initData();
+    }
+  },
+  mounted() {
+    this.checkTableInfor();
+    // this.setTableHeight(275);
+  },
+  computed: {
+    ...mapState({
+      // totalCount: ({ normalPriceGoods }) => normalPriceGoods.list.totalCount,
+    })
+  },
+  methods: {
+    ...mapActions([
+      // "changeList",
+      // "querySkuListByConditionSearch",
+      "showPageLoading",
+      "hidePageLoading",
+      // "changeStatusUpdate",
+      // "querySearchmer",
+      "goodsPriceNormalQuery",
+      "goodsPriceNormalDelete",
+      "goodsPriceNormalEditType",
+      "goodsPriceNormalEditApproveType",
+      "goodsPriceNormalAdd",
+      "goodsPriceNormalEdit",
+      "goodsPriceNormalCheck"
+    ]),
+    initData() {
+      this.getReset()
+    },
+    // 回车搜索
+    searchEnterFun(e) {
+      var keyCode = window.event ? e.keyCode : e.which;
+      //  console.log('回车搜索',keyCode,e);
+      if (keyCode == 13 && this.productName) {
+        this.refreshPage(this.flag);
+      } else {
+        this.refreshPage(this.flag);
+      }
+    },
+    // 搜索
+    getSearchValue(searchValue) {
+      // console.log(searchValue,"1111")
+      this.param.billNo = searchValue;
+      this.isSearch = true;
+      this.isClear = false;
+      this.searchItemValueArray = [searchValue];
+      this.refreshPage(this.param);
+    },
+    getDeleteItem(index) {
+      this.searchItemValueArray.splice(index);
+      this.isClear = true;
+      this.param.billNo = "";
+      this.refreshPage()
+    },
+
+    // 搜索重置
+    getReset() {
+      this.showResetButton = false;
+      this.isShowSearchResult = false;
+      this.param.billNo = "";
+      // this.isSearch = false;
+      this.isClick = false;
+      this.checkTableInfor();
+      this.manner = this.status = "";
+    },
+    getDeleteItem(index) {
+      this.searchItemValueArray.splice(index);
+      this.isClear = true;
+      this.param.billNo = "";
+      this.refreshPage();
+    },
+    // 获取列表数据
+    queryReturnListFunction(param) {
+      // console.log(param,"3333333")
+      this.paginationShow = true;
+      this.checkTableInfor(param)
+    },
+    // handleFilterGoods() {
+    //   let condition = this.searchCondition;
+    //   let _data = this.conditionData;
+    //   let _dataTemp = [];
+    //   if (condition[0]) {
+    //     _dataTemp = _data.filter(item => {
+    //       if (item.status == condition[0]) return item;
+    //     });
+    //     this.tableData = _dataTemp;
+    //   }
+
+    //   if (condition[1]) {
+    //     this.tableData = _dataTemp.filter(item => {
+    //       if (item.saleType == condition[1]) return item;
+    //     });
+    //   }
+    // },
+    // 重新调用查询列表数据
+    refreshPage() {
+      const nval = {
+        pageSize: this.pageSize,
+        pageNo: this.pageNo,
+        billNo: this.param.billNo,
+      };
+      this.showPageLoading();
+      this.queryReturnListFunction(nval);
+    },
+    // 表格操作
+    handleSelectionChange(arr) {
+      this.selectionGoods = arr;
+      this.totalNum = arr.length;
+    },
+    handleSizeChange(nSize) {
+        this.pageSize = nSize;
+        this.pageNo = 1;
+        this.refreshPage();
+    },
+    // 表格下方页数操作
+    handleCurrentChange(val) {
+      this.pageNo = val;
+      this.refreshPage();
+      this.manner = this.status = "";
+    },
+    // 查询表格数据
+    checkTableInfor(nval) {
+      this.paginationShow = true;
+      this.goodsPriceNormalQuery(nval).then(res => {
+        this.totalCount = res.totalCount;
+        this.tableData = res.result.map(i => {
+          return i;
+        });
+      });
+      // this.conditionData = this.querySearchmerList.result;
+      // this.$nextTick(function() {
+      //   this.paginationShow = true;
+      // });
+      this.hidePageLoading();
+    },
+    // 列表删除
+    deleteThat(id) {
+      // 删除该行表格数据
+      this.$confirm("此操作将删除该条信息, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          this.goodsPriceNormalDelete(id).then(res => {
+            this.$message("删除成功");
+            this.checkTableInfor();
+          });
+        })
+        .catch(err => {});
+    },
+    // 列表编辑
+    editTaht(data){
+      // console.log('data0',data)
+      sessionStorage.setItem("generalPriceEditTaht", JSON.stringify(data));
+      this.$router.push({path: `/goods/manage/editGeneralPrice/${data.id}/${data.billNo}`});
+    },
+    // 点击修改状态
+    changeGeneralPriceStatus(row) {
+      let params ={status:row.status,id:row.id}
+      this.goodsPriceNormalEditType(params).then(resp => {
+        this.refreshPage();
+      });
+    },
+    // 点击修改审批状态
+    changeGeneralPriceAppStatus(row){
+      let params ={approveStatus:row.approveStatus,id:row.id}
+      this.goodsPriceNormalEditApproveType(params).then(resp => {
+        this.refreshPage();
+      })
+    }
+  }
+};
+</script>
+<style lang="scss" scoped>
+.general-price {
+  padding: 20px 0 0 0;
+  .ngoc-card-infor-id {
+    position: relative;
+    padding-right: 50px;
+    .operate-div {
+      position: absolute;
+      top: 0;
+      right: 0;
+    }
+  }
+  .pagination {
+    float: right;
+    margin-top: 30px;
+  }
+}
+</style>

@@ -1,0 +1,295 @@
+<template>
+<div class="main-wrapper">
+  <div class="brands-list">
+        <div class="topBox">
+            <search @searchValue="onSearchGood" :showResetButton="showResetButton" @reset="getReset" :isShowSearchResult="isShowSearchResult" :showPlaceholder="'请输入品牌名称或编码'"></search>
+            <el-button type="primary" size="small" style="width:90px;" @click="submitCreatebrand">添加品牌</el-button>
+        </div>
+        <div class="search_result_container" v-if="searchItemValueArray.length>0">
+                <search-result :searchItemValueArray="searchItemValueArray" :count="totalCount"
+                               @deleteItem="getDeleteItem"></search-result>
+            </div>
+        <div class="table-wrapper">
+            <el-table :data="BrandList" border :height="tableHeight">
+
+                <el-table-column label="品牌名称" min-width="100">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.brandCnName">{{scope.row.brandCnName ? scope.row.brandCnName : '--'}}</div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column width="50">
+                    <template slot-scope="scope">
+                        <div class="row-btn-show">
+                            <div>
+                                <more-operating @onEdit="$router.push({ path: `/goods/setting/brandEdit`, query: {brandId: scope.row.brandId, brandCnName: scope.row.brandCnName}})" @onDelete="deleteBrand(scope.row, 0)">
+                                </more-operating>
+                                <span style="padding: 0 7px;float:right;height:1px;"></span>
+                            </div>
+                        </div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="品牌编码" min-width="100">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.brandId">{{scope.row.brandId ? scope.row.brandId :'--'}}</div>
+                    </template>
+                </el-table-column>
+
+                <div slot="empty" class="table_slot_empty_text">
+                    <div><img src="../../../../layouts/images/nodata.png" /></div>
+                    <div>暂无数据</div>
+                </div>
+            </el-table>
+            <div class="pagination-section">
+                <el-pagination @size-change="handleSizeChange"  v-show="BrandList.length!=0" @current-change="handleCurrentChange" :current-page.sync="pageNo" background :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="totalCount">
+                </el-pagination>
+            </div>
+        </div>
+    </div>
+</div>
+    
+</template>
+<script>
+import TableHeight from "~/mixins/tableheight";
+import Search from "~/components/common/Search";
+import SearchResult from "~/components/common/SearchResult.vue";
+import MoreOperating from "~/components/common/MoreOperatingChannelPrice";
+import Modal from "~/components/Modal";
+import PlatformMixins from "~/mixins/platform";
+import { mapActions, mapState } from "vuex";
+
+export default {
+  name: "brand",
+  components: {
+    Search,
+    SearchResult,
+    MoreOperating,
+    Modal
+  },
+  mixins: [TableHeight, PlatformMixins],
+  data() {
+    return {
+      searchKey: "",
+      goodsMultiBarList: [],
+      oneGoodsList: [],
+      pageSize: 10,
+      pageNo: 1,
+      totalCount: 0,
+      skuArray: [],
+      showResetButton: false,
+      isShowSearchResult: false,
+      isClick: false,
+      BrandList: [],
+      flagMsg: "",
+      searchItemValueArray: [],
+      isClear: false
+    };
+  },
+  watch: {
+    changeBrandlist: function(a, b) {
+      console.log(a, b);
+      if (a != b) {
+        this.refreshPage({
+          pageSize: this.pageSize,
+          pageNo: this.pageNo,
+          searchKey: this.searchKey
+        });
+      }
+    }
+  },
+  computed: {
+    ...mapState({
+      changeBrandlist: ({ brand }) => {
+        return brand.isChangeBrandList;
+      }
+    })
+  },
+  mounted() {
+    console.log(222);
+    // this.refreshPage(this.flag);
+    this.setTableHeight(275);
+    this.manageBrandList({
+      pageSize: this.pageSize,
+      pageNo: this.pageNo,
+      searchKey: this.searchKey
+    }).then(resp => {
+      this.BrandList = resp.result;
+      this.totalCount = resp.totalCount;
+    });
+  },
+  methods: {
+    ...mapActions([
+      "manageBrandDelete",
+      "manageBrandList",
+      "showPageLoading",
+      "hidePageLoading"
+    ]),
+
+    getReset() {
+      console.log(333);
+      this.showResetButton = false;
+      this.isShowSearchResult = false;
+      this.isClick = false;
+      this.searchKey = "";
+      this.refreshPage(this.flag);
+    },
+    getDeleteItem(index) {
+      this.searchItemValueArray.splice(index);
+      this.isClear = true;
+      this.searchKey = "";
+      this.refreshPage();
+    },
+    refreshPage(nval) {
+      this.showPageLoading();
+      this.manageBrandList({
+        pageSize: this.pageSize,
+        pageNo: this.pageNo,
+        searchKey: this.searchKey
+      }).then(resp => {
+        this.BrandList = resp.result;
+        this.totalCount = resp.totalCount;
+        this.hidePageLoading();
+      });
+    },
+    //模糊查询
+    onSearchGood(searchValue) {
+      console.log(444);
+      this.searchKey = searchValue;
+      this.isClick = true;
+      this.isClear = false;
+      this.searchItemValueArray = [searchValue];
+      this.refreshPage(this.flag);
+    },
+    searchEnterFun(e) {
+      console.log(555);
+      var keyCode = window.event ? e.keyCode : e.which;
+      //  console.log('回车搜索',keyCode,e);
+      if (keyCode == 13 && this.searchKey) {
+        this.refreshPage(this.flag);
+      } else {
+        this.refreshPage(this.flag);
+      }
+    },
+    // 修改pagesize
+    handleSizeChange(nSize) {
+      console.log(666);
+      this.pageSize = nSize;
+      this.refreshPage(this.flag);
+    },
+    // 修改页码
+    handleCurrentChange(nPage) {
+      console.log(777);
+      console.log("修改page");
+      this.pageNo = nPage;
+      this.refreshPage(this.flag);
+    },
+    // 新增品牌
+    submitCreatebrand() {
+      this.$router.push(`/goods/setting/brandAdd`);
+    },
+    // 删除品牌
+    deleteBrand(item, statu) {
+      let confirmType = `warning`;
+      let confirmText;
+      if (statu === 0) {
+        confirmText = `删除`;
+      }
+      this.$confirm(`确认${confirmText}选中的品牌？`, `${confirmText}品牌`, {
+        confirmButtonText: "确定",
+        type: confirmType
+      })
+        .then(() => {
+          this.manageBrandDelete({ brandId: item.brandId }).then(res => {
+            console.log(res);
+            this.$message({
+              type: "success",
+              message: `${confirmText}品牌成功`
+            });
+            this.refreshPage(this.flag);
+          });
+        })
+        .catch(() => {});
+    },
+    onPageRefresh() {
+      this.flagMsg = "修改品牌list";
+    }
+  }
+};
+</script>
+<style lang="scss">
+.main-wrapper {
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    position: relative;
+}
+.brands-list {
+  padding: 20px 40px;
+  .topBox {
+    .search-component {
+      right: 0px;
+      top: -10px;
+      display: inline-flex;
+    }
+  }
+  .table-wrapper {
+    overflow-y: hidden;
+    .row-btn-show div {
+      color: black;
+      cursor: default;
+    }
+  }
+  .handleButtonContainer {
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    border-radius: 50%;
+    background-color: #eceff1;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    margin-right: 10px;
+  }
+  .el-table th:first-child {
+    border-right: none;
+  }
+  .el-table th:nth-child(2) {
+    border-left: none;
+  }
+}
+
+.el-tooltip__popper.is-light {
+  background: #fff;
+  border: 1px solid #eee;
+}
+
+.el-tooltip__popper.is-light[x-placement^="bottom"] .popper__arrow {
+  border-bottom-color: #eee;
+}
+
+.el-input-group__prepend {
+  background-color: #fff;
+}
+
+.el-input-group--prepend .el-input__inner,
+.el-input-group__append {
+  border-left: 0px;
+  padding-left: 0;
+}
+
+.el-button + .el-button {
+  margin-left: 10px;
+}
+
+.iconColor {
+  color: black;
+}
+
+.showMoreColor {
+  cursor: pointer;
+  &:hover {
+    color: #3b8cff;
+  }
+}
+</style>

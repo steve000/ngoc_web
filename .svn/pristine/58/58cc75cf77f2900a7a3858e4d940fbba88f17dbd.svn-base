@@ -1,0 +1,296 @@
+<template>
+    <div class="">
+        <div class="search">
+            <search @searchValue="onSearchGood" :showResetButton="showResetButton" @reset="getReset" :isShowSearchResult="isShowSearchResult" :count="totalCount" :showPlaceholder="'请输入类目名称或编码'"></search>
+        </div>
+        <div class="search_result_container" v-if="searchItemValueArray.length>0">
+            <search-result :searchItemValueArray="searchItemValueArray" :count="totalCount" @deleteItem="getDeleteItem"></search-result>
+        </div>
+        <div class="table-wrapper">
+            <el-table :data="goodsCategoryList" border :height="tableHeight">
+
+                <el-table-column label="品类名称" min-width="200">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.cateName">{{scope.row.cateName ? scope.row.cateName : '--'}}</div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column width="30">
+                        <template slot-scope="scope">
+                            <div class="row-btn-show">
+                                <div>
+                                    <more-operating @onEdit="$router.push({ name:'categoryEdit', params: {data: scope.row}})"
+                                                    @onDelete="deleteCategory(scope.row, 0)">
+                                    </more-operating>
+                                    <span style="padding: 0 7px;float:right;height:1px;"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </el-table-column>
+                
+                <el-table-column label="品类编码" min-width="200">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.cateId">{{scope.row.cateId ? scope.row.cateId :'--'}}</div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="上级品类编码" min-width="300">
+                    <template slot-scope="scope">
+                        <div class="row-btn-show ">
+                            <div class="row-show" :title="scope.row.parentCateId" @click="viewGoods(scope.row.parentCateId)">{{scope.row.parentCateId ? scope.row.parentCateId : '--'}}
+                            </div>
+                        </div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="上级品类名称" min-width="300">
+                    <template slot-scope="scope">
+                        <div class="row-btn-show ">
+                            <div class="row-show" :title="scope.row.parentCateName" @click="viewGoods(scope.row.parentCateName)">{{scope.row.parentCateName ? scope.row.parentCateName : '--'}}
+                            </div>
+                        </div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="品类层级" min-width="200">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.level">{{scope.row.level ? scope.row.level : '--'}}</div>
+                    </template>
+                </el-table-column>
+
+                <div slot="empty" class="table_slot_empty_text">
+                    <div><img src="../../../layouts/images/nodata.png" /></div>
+                    <div>暂无数据</div>
+                </div>
+            </el-table>
+            <div class="pagination-section">
+                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="params.pageNo" background :page-size="params.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="totalCount">
+                </el-pagination>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+import TableHeight from "~/mixins/tableheight";
+import Search from "~/components/common/Search";
+import SearchResult from "~/components/common/SearchResult.vue";
+import MoreOperating from "~/components/common/MoreOperatingChannelPrice";
+import Modal from "~/components/Modal";
+import { mapActions, mapState } from "vuex";
+
+export default {
+  props: { operationId: Number, flag: String, level: Number },
+  name: "CategoryList",
+  mixins: [TableHeight],
+  components: {
+    Search,
+    SearchResult,
+    MoreOperating,
+    Modal
+  },
+  data() {
+    return {
+      goodsCategoryList: [],
+      oneGoodsList: [],
+      totalCount: 0,
+      skuArray: [],
+      showResetButton: false,
+      isShowSearchResult: false,
+      isClick: false,
+      params: {
+        pageSize: 10,
+        pageNo: 1,
+        searchKey: "",
+        level: null,
+        parentCateId: null
+      },
+      searchItemValueArray: [],
+      isClear: false
+    };
+  },
+  watch: {
+    level: function(cateLevel) {
+      console.log(cateLevel, "level");
+      this.params.level = cateLevel;
+    },
+    flag: function(nval) {
+      console.log(nval, "flag");
+      this.refreshPage(this.params);
+    },
+    operationId: function(nval) {
+      console.log(nval, "operationId");
+      this.params.parentCateId = nval;
+      this.params.pageSize = 10;
+      this.params.pageNo = 1;
+      if (this.params.level == 1) {
+        console.log(111111111);
+      } else if (this.params.level == 2) {
+        console.log(222222222);
+      } else if (this.params.level == 3) {
+        console.log(333333333);
+      }
+      this.refreshPage(this.params);
+    }
+  },
+  mounted() {
+    console.log(222);
+    // this.refreshPage(this.params);
+    this.setTableHeight(275);
+  },
+  methods: {
+    ...mapActions([
+      "manageCategoryAdd",
+      "manageCategoryDelete",
+      "manageCategoryList",
+      "showPageLoading",
+      "hidePageLoading"
+    ]),
+    getReset() {
+      console.log(333);
+      this.showResetButton = false;
+      this.isShowSearchResult = false;
+      this.isClick = false;
+      this.params.searchKey = "";
+      this.refreshPage(this.params);
+    },
+    getDeleteItem(index) {
+      this.searchItemValueArray.splice(index);
+      this.isClear = true;
+      this.params.searchKey = "";
+      this.refreshPage(this.params);
+    },
+    refreshPage(nval) {
+      this.showPageLoading();
+      this.manageCategoryList(nval).then(resp => {
+        this.hidePageLoading();
+        resp.result.forEach(one => {
+          one.has_show_more = false;
+          // 给记录添加是否已展开标记，true的话表示已经展开，false表示没有展开
+        });
+        if (this.isClick) {
+          this.showResetButton = true;
+          this.isShowSearchResult = true;
+        }
+        this.goodsCategoryList = resp.result;
+        this.totalCount = resp.totalCount;
+      });
+    },
+    //模糊查询
+    onSearchGood(searchValue) {
+      console.log(444);
+      this.params.searchKey = searchValue;
+      this.isClick = true;
+      this.isClear = false;
+      this.searchItemValueArray = [searchValue];
+      this.refreshPage(this.params);
+    },
+    searchEnterFun(e) {
+      console.log(555);
+      var keyCode = window.event ? e.keyCode : e.which;
+      //  console.log('回车搜索',keyCode,e);
+      if (keyCode == 13 && this.params.searchKey) {
+        this.refreshPage(this.params);
+      } else {
+        this.refreshPage(this.params);
+      }
+    },
+    // 查看详情
+    viewGoods(id) {
+      this.$router.push(`/goods/view/${id}`);
+      sessionStorage.setItem("goodscateId", id);
+      sessionStorage.setItem("cateId", this.params);
+    },
+    // 查看更多弃用
+    showMore(index, row) {
+      var id = row.productId;
+      if (!row["has_show_more"]) {
+        if (this.isLoading) {
+          return false;
+        }
+        var reqData = {
+          productId: id
+        };
+        this.showPageLoading();
+        this.queryGoodsListSku(reqData)
+          .then(resp => {
+            resp.forEach(one => {
+              one.isSubContent = true;
+              one.productId = " ";
+              one.cateName = one.skuName;
+              // one.sub_show = true          //给返回的子列表添加字段作为标记，true的时候表示是展开的内容，没有该字段表示不是展开的内容
+            });
+            resp.forEach(item => {
+              item.skuAttrsNew = "";
+              if (item.skuAttrs && item.skuAttrs.length > 0) {
+                item.skuAttrs.forEach(one => {
+                  item.skuAttrsNew += one.attrValue + ",";
+                });
+                item.skuAttrsNew = item.skuAttrsNew.substring(
+                  0,
+                  item.skuAttrsNew.length - 1
+                );
+              }
+            });
+            this.oneGoodsList = resp;
+            this.goodsList[index].sub_show_length = resp.length; //给展开的记录添加展开的内容长度标记
+            this.goodsList.splice(index + 1, 0, ...this.oneGoodsList);
+            this.goodsList[index].has_show_more = true; //设置标记已展开
+            this.hidePageLoading();
+          })
+          .catch(() => {
+            this.hidePageLoading();
+          });
+      } else {
+        let length = this.goodsList[index].sub_show_length; //获取要删除的长度
+        this.goodsList.splice(index + 1, length); //删除展开的内容
+        this.goodsList[index].has_show_more = false; //设置标记未展开
+        this.goodsList[index].sub_show_length = 0;
+      }
+    },
+    // 修改pagesize
+    handleSizeChange(nSize) {
+      console.log(666);
+      this.params.pageSize = nSize;
+      this.refreshPage(this.params);
+    },
+    // 修改页码
+    handleCurrentChange(nPage) {
+      console.log(777);
+      console.log("修改page");
+      this.params.pageNo = nPage;
+      this.refreshPage(this.params);
+    },
+    // 删除类目
+    deleteCategory(item, statu) {
+      let confirmType = `warning`;
+      let confirmText;
+      if (statu === 0) {
+        confirmText = `删除`;
+      }
+      this.$confirm(`确认${confirmText}选中的类目？`, `${confirmText}类目`, {
+        confirmButtonText: "确定",
+        type: confirmType
+      })
+        .then(() => {
+          this.manageCategoryDelete({ cateId: item.cateId }).then(res => {
+            console.log(res);
+            this.$message({
+              type: "success",
+              message: `${confirmText}类目成功`
+            });
+            this.refreshPage(this.params);
+          });
+        })
+        .catch(() => {});
+    }
+  }
+};
+</script>
+<style lang="scss">
+.search {
+  margin-top: 20px;
+  .search-component {
+    right: 0px;
+  }
+}
+</style>

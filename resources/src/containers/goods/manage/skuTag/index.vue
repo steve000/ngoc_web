@@ -1,0 +1,418 @@
+<template>
+
+
+    <div class="content-section-skuTagAdd">
+        <div class="left-section pull-left">
+            <div class="add-section" style="margin: 0px">
+                <el-button type="primary" @click="submitCreatebrand" class="addmutibar" icon="el-icon-plus" :disabled="false">新增商品标签</el-button>
+            </div>
+            <el-menu default-active="1">
+                  <el-menu-item index="1">
+                      <i class="iconfont1 iconquanbu icon-quanbu"></i>
+                      <div slot="title" @click="showGoods('-1')" class="menu-btn-space">全部商品标签</div>
+                  </el-menu-item>
+            </el-menu>
+        </div>
+        <div class="main-section">
+            <div class="main-wrapper">
+              <div class="skuTag-list">
+                  <div class="topBox">
+                      <search @searchValue="onSearchGood" :showResetButton="showResetButton" @reset="getReset" :isShowSearchResult="isShowSearchResult" :count="totalCount" :showPlaceholder="'输入商品名称或编码'"></search>
+                  </div>
+                  <div class="search_result_container" v-if="searchItemValueArray.length>0">
+                          <search-result :searchItemValueArray="searchItemValueArray" :count="totalCount"
+                                        @deleteItem="getDeleteItem"></search-result>
+                      </div>
+                  <div class="table-wrapper">
+                      <el-table :data="BrandList" border :height="tableHeight">
+                          <!-- <el-table-column width="30">
+                              <template slot-scope="scope">
+                                  <div v-if="!scope.row.isSubContent">
+                                      <div @click="showMore(scope.$index,scope.row)" class="showMoreColor">
+                                      <div class="showMoreColor">
+                                          <i class="row-show" :class="scope.row['has_show_more'] ? 'el-icon-arrow-down' : 'el-icon-arrow-right'"></i>
+                                      </div>
+                                  </div>
+                              </template>
+                          </el-table-column> -->
+
+                          <el-table-column label="商品名称" min-width="300">
+                              <template slot-scope="scope">
+                                  <div class="row-show" :title="scope.row.skuName">{{scope.row.skuName ? scope.row.skuName : '--'}}</div>
+                              </template>
+                          </el-table-column>
+
+                          <el-table-column width="50">
+                              <template slot-scope="scope">
+                                  <div class="row-btn-show">
+                                      <div>
+                                          <more-SKUTag @onDelete="deleteBrand(scope.row, 0)">
+                                          </more-SKUTag>
+                                          <span style="padding: 0 7px;float:right;height:1px;"></span>
+                                      </div>
+                                  </div>
+                              </template>
+                          </el-table-column>
+
+                          <el-table-column label="商品编码" min-width="300">
+                              <template slot-scope="scope">
+                                  <div class="row-show" :title="scope.row.skuId">{{scope.row.skuId ? scope.row.skuId :'--'}}</div>
+                              </template>
+                          </el-table-column>
+
+                          <el-table-column label="标签名" min-width="300">
+                              <template slot-scope="scope">
+                                  <div class="row-show" :title="scope.row.tagName">{{scope.row.tagName ? scope.row.tagName :'--'}}</div>
+                              </template>
+                          </el-table-column>
+
+                          <div slot="empty" class="table_slot_empty_text">
+                              <div><img src="../../../../layouts/images/nodata.png" /></div>
+                              <div>暂无数据</div>
+                          </div>
+                      </el-table>
+                      <div class="pagination-section">
+                          <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="pageNo" background :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="totalCount">
+                          </el-pagination>
+                      </div>
+                  </div>
+              </div>
+            </div>
+        </div>
+    </div>
+    
+</template>
+<script>
+import TableHeight from "~/mixins/tableheight";
+import Search from "~/components/common/Search";
+import SearchResult from "~/components/common/SearchResult.vue";
+import MoreSKUTag from "~/components/common/MoreSKUTag";
+import Modal from "~/components/Modal";
+import PlatformMixins from "~/mixins/platform";
+import { mapActions, mapState } from "vuex";
+
+export default {
+  name: "skuTag",
+  components: {
+    Search,
+    SearchResult,
+    MoreSKUTag,
+    Modal
+  },
+  mixins: [TableHeight, PlatformMixins],
+  data() {
+    return {
+      operationId: 0,
+      searchKey: "",
+      goodsMultiBarList: [],
+      oneGoodsList: [],
+      pageSize: 10,
+      pageNo: 1,
+      totalCount: 0,
+      skuArray: [],
+      showResetButton: false,
+      isShowSearchResult: false,
+      isClick: false,
+      BrandList: [],
+      searchItemValueArray: [],
+      isClear: false
+    };
+  },
+  watch: {
+    // changeSkuTaglist: function(a, b) {
+    //   console.log(a, b);
+    //   if (a != b) {
+    //     this.refreshPage();
+    //   }
+    // },
+    operationId: function (a, b) {
+      console.log(a, b);
+      if (a != b) {
+        this.refreshPage();
+      }
+    }
+  },
+  computed: {
+    ...mapState({
+      changeSkuTaglist: ({ skuTag }) => {
+        return skuTag.isChangeSkuTagList;
+      }
+    })
+  },
+  mounted() {
+    this.setTableHeight(275);
+    this.refreshPage();
+  },
+  methods: {
+    ...mapActions([
+      "skuCommodityManagementDeletetag",
+      "skuCommodityManagementDeletetagbatch",
+      "showPageLoading",
+      "hidePageLoading"
+    ]),
+    showGoods() {
+      this.getReset()
+    },
+    getReset() {
+      console.log(333);
+      this.showResetButton = false;
+      this.isShowSearchResult = false;
+      this.isClick = false;
+      this.searchKey = "";
+      this.refreshPage();
+    },
+    getDeleteItem(index) {
+      this.searchItemValueArray.splice(index);
+      this.isClear = true;
+      this.searchKey = "";
+      this.refreshPage();
+    },
+    refreshPage(nval) {
+      this.showPageLoading();
+      this.skuCommodityManagementDeletetagbatch({
+        pageNo: this.pageNo,
+        pageSize: this.pageSize,
+        searchKey: this.searchKey
+      }).then(resp => {
+        this.BrandList = resp.result;
+        this.totalCount = resp.totalCount;
+        this.hidePageLoading();
+      });
+    },
+    //模糊查询
+    onSearchGood(searchValue) {
+      console.log(444);
+      this.searchKey = searchValue;
+      this.isClick = true;
+      this.isClear = false;
+      this.searchItemValueArray = [searchValue];
+      this.refreshPage();
+    },
+    searchEnterFun(e) {
+      console.log(555);
+      var keyCode = window.event ? e.keyCode : e.which;
+      //  console.log('回车搜索',keyCode,e);
+      if (keyCode == 13 && this.searchKey) {
+        this.refreshPage();
+      } else {
+        this.refreshPage();
+      }
+    },
+    // 修改pagesize
+    handleSizeChange(nSize) {
+      console.log(666);
+      this.pageSize = nSize;
+      this.refreshPage();
+    },
+    // 修改页码
+    handleCurrentChange(nPage) {
+      console.log(777);
+      console.log("修改page");
+      this.pageNo = nPage;
+      this.refreshPage();
+    },
+    // 新增品牌
+    submitCreatebrand() {
+      this.$router.push(`/goods/manage/addSkuTag`);
+    },
+    // 删除品牌
+    deleteBrand(item, statu) {
+      let confirmType = `warning`;
+      let confirmText;
+      if (statu === 0) {
+        confirmText = `删除`;
+      }
+      this.$confirm(`确认${confirmText}选中的品牌？`, `${confirmText}品牌`, {
+        confirmButtonText: "确定",
+        type: confirmType
+      })
+        .then(() => {
+          this.skuCommodityManagementDeletetag({ id: item.id }).then(res => {
+            console.log(res);
+            this.$message({
+              type: "success",
+              message: `${confirmText}商品标签成功`
+            });
+            this.refreshPage();
+          });
+        })
+        .catch(() => {});
+    },
+    onPageRefresh() {
+      this.operationId = this.operationId + 1;
+    }
+  }
+};
+</script>
+<style lang="scss">
+.list-menu {
+  height: 36px;
+  border-bottom: 1px solid #eee;
+  .isactive {
+    border-left: 4px solid #40b6fa;
+    color: #40b6fa;
+  }
+}
+
+.content-section-skuTagAdd {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  .left-section {
+    .add-section {
+      padding: 10px;
+      margin: -80px 0 0;
+      .addmutibar {
+        display: flex;
+        margin: auto;
+        padding: 9px 12px;
+      }
+      
+    }
+    .iconquanbu {
+        margin-left: 10px;
+        margin-right: 5px;
+    }
+    .el-menu {
+        background-color: #E9EEF1;
+        .divide-line {
+            margin-left: 20px;
+            width: 120px;
+            border-bottom: 1px solid #DDE2E5;
+        }
+        .el-menu-item {
+            line-height: 44px;
+            height: 44px;
+            color: #424E67;
+        }
+        .el-menu-item.is-active {
+            color: #3B8CFF;
+            background-color: #dde2e5 !important;
+        }
+        .el-menu-item:hover {
+            background-color: #dde2e5 !important;
+        }
+        .menu-btn-space {
+            display: inline-block;
+            width: 100px;
+            font-size: 12px;
+        }
+        .menu-icon-place-holder {
+            margin-right: 5px;
+            width: 24px;
+            text-align: center;
+            font-size: 18px;
+            vertical-align: middle;
+            display: inline-block;
+        }
+        .el-menu-item:nth-child(1) {
+            .menu-btn-space {
+                font-size: 14px;
+            }
+        }
+    }
+  }
+  .pull-left {
+    overflow: hidden;
+    .el-menu-item-group > ul {
+      overflow: hidden;
+    }
+  }
+  // .el-submenu__title {
+  //   border-top: 1px solid lightgray;
+  //   border-bottom: 1px solid lightgray;
+  // }
+  // .el-menu-item.is-active {
+  //   border-left: 4px solid;
+  // }
+  // .el-menu-item {
+  //   border-bottom: 1px solid lightgray;
+  //   :hover {
+  //     background-color: red !important;
+  //   }
+  // }
+  // .el-menu-item-group__title {
+  //   padding: 0;
+  // }
+  .main-section {
+    .main-wrapper {
+      .block-color {
+        width: 100%;
+        height: 100%;
+        background-color: #fff;
+        position: relative;
+      }
+    }
+  }
+}
+.skuTag-list {
+  padding: 0 40px;
+  .topBox {
+    margin-top: 20px;
+    .search-component {
+      right: 0px;
+      top: -10px;
+      display: inline-flex;
+    }
+  }
+  .table-wrapper {
+    overflow-y: hidden;
+    .row-btn-show div {
+      color: black;
+      cursor: default;
+    }
+  }
+  .handleButtonContainer {
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    border-radius: 50%;
+    background-color: #eceff1;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    margin-right: 10px;
+  }
+  .el-table th:first-child {
+    border-right: none;
+  }
+  .el-table th:nth-child(2) {
+    border-left: none;
+  }
+}
+
+.el-tooltip__popper.is-light {
+  background: #fff;
+  border: 1px solid #eee;
+}
+
+.el-tooltip__popper.is-light[x-placement^="bottom"] .popper__arrow {
+  border-bottom-color: #eee;
+}
+
+.el-input-group__prepend {
+  background-color: #fff;
+}
+
+.el-input-group--prepend .el-input__inner,
+.el-input-group__append {
+  border-left: 0px;
+  padding-left: 0;
+}
+
+.el-button + .el-button {
+  margin-left: 10px;
+}
+
+.iconColor {
+  color: black;
+}
+
+.showMoreColor {
+  cursor: pointer;
+  &:hover {
+    color: #3b8cff;
+  }
+}
+</style>

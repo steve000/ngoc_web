@@ -1,0 +1,307 @@
+<template>
+  <div class="add">
+    <div class="content">
+        <div class="title">
+            <div>基本信息</div>
+        </div>
+        <div class="content-wrapper">
+            <el-form label-width="110px" :model="addForm" ref="addFormParams" class="clearfix">
+              <el-col :span="8">
+                <el-form-item label="制单人：">
+                  <el-input
+                    disabled
+                    v-model="userName"
+                    placeholder="请输入制单人">
+                  </el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="16">
+                <el-form-item label="定价方式：">
+                  <el-select @change="changepriceFixType()"
+                    placeholder="请选择定价方式"
+                    disabled
+                    v-model="addForm.priceFixType">
+                      <el-option :value="0" label="统一"></el-option>
+                      <el-option :value="1" label="分别"></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>  
+              <div class="clearfix">          
+                <el-col :span="8">
+                  <el-form-item label="调整零售价">
+                  <el-checkbox disabled v-model="addForm.isSalePrice"></el-checkbox>
+                  </el-form-item> 
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="调整会员价">
+                  <el-checkbox disabled v-model="addForm.isVipPrice"></el-checkbox>
+                  </el-form-item> 
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="调整团购价">
+                  <el-checkbox disabled v-model="addForm.isGroupPrice"></el-checkbox>
+                  </el-form-item> 
+                </el-col>
+              </div>
+              <el-col :span="24">
+                <el-form-item label="备注：" label-width="110px">
+                  <el-input
+                    type="textarea"
+                    :rows="4"
+                    :maxlength="200" placeholder="请输入备注，最多200个字"
+                    v-model="addForm.remark"
+                    resize="none"
+                    style="width: 1100px;">
+                  </el-input>
+                  <span style="display:block">{{addForm.remark.length}}/200</span>
+                </el-form-item>
+              </el-col>
+              <el-col :span="24">
+                <el-form-item>
+                  <Pricepolicy-Tabs v-bind:priceList="addForm.productList" :stats='stats' v-bind:userGroupList='addForm.userGroupList'></Pricepolicy-Tabs>
+                </el-form-item>
+              </el-col>
+              <el-col :span="24">
+                <el-form-item>
+                  <el-button type="primary" size="small" @click="editFunction('addFormParams')">提交</el-button>
+                  <el-button type="primary" plain size="small" @click="cancelFunction('addFormParams')">取消</el-button>
+                </el-form-item>
+              </el-col>
+            </el-form>
+        </div>
+    </div>
+    
+  </div>
+  
+</template>
+
+<script>
+import { mapActions, mapState } from "vuex";
+import PlatformMixins from "~/mixins/platform";
+import QuitMixins from '~/mixins/quit';
+import {routesMapping} from '~/router';
+import PricepolicyTabs from "~/components/goods/manage/pricepolicyTabs";
+
+export default {
+  name: "addEdit",
+  mixins: [PlatformMixins,QuitMixins],
+  components: { 
+    PricepolicyTabs 
+  },
+  props: ["type"],
+  data() {
+    return {
+      // 需要提交的数据
+      addForm: {
+        id: '',
+        remark: '',
+        // priceFixType: '',
+        // isSalePrice: 1?false:true,
+        // isVipPrice: 1?false:true,
+        // isGroupPrice: 1?false:true,
+        productList: [
+          {
+            skuId: '',
+            skuName: '',
+            salePrice: '',
+            vipPrice: '',
+            groupPrice: '',
+            unitName: '',
+            unitId: '',
+            remark: '',
+            id: ''
+          }
+        ],
+        userGroupList: [
+          {
+            userGroupId: '',
+            id: ''
+          }
+        ],
+      },
+      // repeatFormData: {},
+      // 组件传递的数据
+      stats: {
+        pdz: 1,
+        isSalePrice: null,
+        isVipPrice: null,
+        isGroupPrice: null,
+        priceFixType: null
+      },
+      userName: '',
+      userId: ''
+    };
+  },
+  mounted() {
+    this.userName = sessionStorage.getItem('userName')
+    this.userId = sessionStorage.getItem('userId')
+    this.queryPricepolicy()
+  },
+  methods: {
+    ...mapActions([
+      "goodsPriceNormalEdit",
+      "goodsPriceNormalCheck"
+    ]),
+    queryPricepolicy(){
+      this.$nextTick(() => {
+        this.goodsPriceNormalCheck({id: this.$route.params.id, billNo: this.$route.params.billNo}).then(res=>{
+          // console.log(this.addForm, 999)
+          this.addForm = res
+          
+          this.addForm.isSalePrice = !!res.isSalePrice
+          this.addForm.isVipPrice = !!res.isVipPrice
+          this.addForm.isGroupPrice = !!res.isGroupPrice
+          // this.addForm.productList = res.productList
+          // this.addForm.userGroupList = res.userGroupList
+        })
+      })
+    },    
+    // 定价方式切换
+    changepriceFixType(){
+
+    },
+    // 提交表单
+    editFunction (addFormParams) {
+
+
+      let goArr = true  
+      if (this.addForm.productList.length > 2) {
+        let newArr = []
+        this.addForm.productList.forEach(item => {
+          newArr.push(item.skuName)
+        })
+        var nary=newArr.sort(); 
+        for(var i=0;i<this.addForm.productList.length;i++){
+            if (nary[i]==nary[i+1]){
+              // console.log("数组重复内容："+nary[i]);
+              this.$message({
+                  type: 'warning',
+                  message: '请选择不重复商品'
+              });
+              goArr = false
+            }
+        }
+      }
+      if (this.addForm.priceFixType == 1 && this.addForm.userGroupList.length > 2) {
+        let new2Arr = []
+        this.addForm.userGroupList.forEach(item => {
+          new2Arr.push(item.userGroupId)
+        })
+        var nar2y=new2Arr.sort(); 
+        for(var i=0;i<this.addForm.userGroupList.length;i++){
+            if (nar2y[i]==nar2y[i+1]){
+              // console.log("数组重复内容："+nar2y[i]);
+              this.$message({
+                  type: 'warning',
+                  message: '请选择不重复业务实体'
+              });
+              goArr = false
+            }
+        }
+      }
+      if (this.addForm.isSalePrice == 1) {
+        this.addForm.productList.forEach((item, index) => {
+          console.log(item.salePrice, 887)
+          if (item.salePrice < 0) {
+            this.$message({
+                type: 'warning',
+                message: '零售价不能小于0'
+            });
+            goArr = false
+          } else if (item.salePrice == '' || item.salePrice == undefined) {
+            this.$message({
+                type: 'warning',
+                message: '请填写零售价'
+            });
+            goArr = false
+          }
+        })
+      } else if (this.addForm.isVipPrice == 1) {
+        this.addForm.productList.forEach((item, index) => {
+          if (item.vipPrice < 0) {
+            this.$message({
+                type: 'warning',
+                message: '会员价不能小于0'
+            });
+            goArr = false
+          } else if (item.vipPrice == '' || item.vipPrice == undefined) {
+            this.$message({
+                type: 'warning',
+                message: '请填写会员价'
+            });
+            goArr = false
+          }
+        })
+      } else if (this.addForm.isGroupPrice == 1) {
+        this.addForm.productList.forEach((item, index) => {
+          if (item.groupPrice < 0) {
+            this.$message({
+                type: 'warning',
+                message: '团购价不能小于0'
+            });
+            goArr = false
+          } else if (item.groupPrice == '' || item.groupPrice == undefined) {
+            this.$message({
+                type: 'warning',
+                message: '请填写团购价'
+            });
+            goArr = false
+          }
+        })
+      }
+
+      if (goArr) {
+        let datas = {}
+        datas = this.addForm
+        datas.isGroupPrice ? datas.isGroupPrice = 1 : datas.isGroupPrice = 0
+        datas.isSalePrice ? datas.isSalePrice = 1 : datas.isSalePrice = 0
+        datas.isVipPrice ? datas.isVipPrice = 1 : datas.isVipPrice = 0
+        this.goodsPriceNormalEdit(datas).then(res => {
+          this.OnBackLatePage()
+        });
+      }
+      // this.$refs[addFormParams].validate((valid) => {
+      //   if (valid) {
+      //     alert('submit!');
+      //   } else {
+      //     console.log('error submit!!');
+      //     return false;
+      //   }
+      // });
+    },
+    // 取消提交表单
+    cancelFunction (addFormParams) {
+      // this.$refs[addFormParams].resetFields();
+      this.OnBackLatePage()
+    },
+    OnBackLatePage(){
+      this.$message({
+        type: 'success',
+        message: `操作成功`
+      })
+      this.quit(routesMapping.GoodsGeneralPricePolicy,true)
+    },
+  },
+  watch: {
+    'addForm.isSalePrice': function (val, oldVal) {
+      this.stats.isSalePrice = val
+    },
+    'addForm.isVipPrice': function (val, oldVal) {
+      this.stats.isVipPrice = val
+    },
+    'addForm.isGroupPrice': function (val, oldVal) {
+      this.stats.isGroupPrice = val
+    },
+    'addForm.priceFixType': function (val, oldVal) {
+      this.stats.priceFixType = val
+    }
+
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.clearfix{
+  clear: both;
+}
+</style>

@@ -1,0 +1,27 @@
+$body-width: 1200px;
+$header-height: 60px;
+$header-background: #2f2f2f;
+$header-text-color: #fff;
+$header-color           : #4799f3;
+$primary-color          : #46bafe;
+
+// base color
+$grey-color             : #333;
+// ------ Base & Require ------
+$body-background: #F5F5F5;
+
+$font-family            : "Microsoft YaHei","微软雅黑",Arial,sans-serif;
+$text-color             : #666;
+$font-size-base         : 13px;
+$line-height-base       : 1.5;
+$line-height-computed   : floor(($font-size-base * $line-height-base));
+$border-radius-base     : 6px;
+$border-radius-sm       : 4px;
+
+
+
+// LINK
+$link-color             : #2db7f5;
+$link-hover-color       : tint($link-color, 20%);
+$link-active-color      : shade($link-color, 5%);
+$link-hover-decoration  : none;

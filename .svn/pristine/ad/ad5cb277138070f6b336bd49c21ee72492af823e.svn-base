@@ -1,0 +1,9 @@
+.content-wrapper {
+    .el-form-item.is-success .el-input__inner:focus,
+    .el-form-item.is-success .el-textarea__inner:focus {
+        border-color: #409EFF;
+    }
+    .el-form .is-success .el-input__inner {
+        border-color: #dcdfe6;
+    }
+}

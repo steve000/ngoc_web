@@ -1,0 +1,378 @@
+<template>
+    <div class="goods-list">
+        <div class="search">
+            <search @searchValue="onSearchGood" :showResetButton="showResetButton" @reset="getReset" :isShowSearchResult="isShowSearchResult" :count="totalCount" :showPlaceholder="'输入产品名称/SPU编码'"></search>
+        </div>
+        <div class="search_result_container" v-if="searchItemValueArray.length>0">
+            <search-result :searchItemValueArray="searchItemValueArray" :count="totalCount" @deleteItem="getDeleteItem"></search-result>
+        </div>
+        <div class="table-wrapper">
+            <el-table :data="goodsDigitalAttrList" border class="setFixedHeight">
+
+                <el-table-column label="产品名称" min-width="150">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.productName">{{scope.row.productName ? scope.row.productName : '--'}}</div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column width="40">
+                    <template slot-scope="scope">
+                        <div class="row-btn-show">
+                            <div>
+                                <more-operating @onEdit="clickEdit(scope.row)">
+                                </more-operating>
+                                <span style="padding: 0 7px;float:right;height:1px;"></span>
+                            </div>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="SPU编码" min-width="150">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.productId">{{scope.row.productId ? scope.row.productId :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性1" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp1">{{scope.row.udp1 ? scope.row.udp1 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性2" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp2">{{scope.row.udp2 ? scope.row.udp2 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性3" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp3">{{scope.row.udp3 ? scope.row.udp3 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性4" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp4">{{scope.row.udp4 ? scope.row.udp4 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性5" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp5">{{scope.row.udp5 ? scope.row.udp5 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性6" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp6">{{scope.row.udp6 ? scope.row.udp6 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性7" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp7">{{scope.row.udp7 ? scope.row.udp7 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性8" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp8">{{scope.row.udp8 ? scope.row.udp8 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性9" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp9">{{scope.row.udp9 ? scope.row.udp9 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性10" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp10">{{scope.row.udp10 ? scope.row.udp10 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性11" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp11">{{scope.row.udp11 ? scope.row.udp11 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性12" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp12">{{scope.row.udp12 ? scope.row.udp12 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性13" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp13">{{scope.row.udp13 ? scope.row.udp13 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性14" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp14">{{scope.row.udp14 ? scope.row.udp14 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性15" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp15">{{scope.row.udp15 ? scope.row.udp15 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性16" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp16">{{scope.row.udp16 ? scope.row.udp16 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性17" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp17">{{scope.row.udp17 ? scope.row.udp17 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性18" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp18">{{scope.row.udp18 ? scope.row.udp18 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性19" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp19">{{scope.row.udp19 ? scope.row.udp19 :'--'}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="属性20" min-width="60">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.udp20">{{scope.row.udp20 ? scope.row.udp20 :'--'}}</div>
+                    </template>
+                </el-table-column>
+
+                <!-- <el-table-column min-width="80" v-for="col in goodsPropertyCols" v-bind:key="col.id" :label="'属性'+col.name.slice(3)">
+                    <template slot-scope="col">
+                        <div class="row-show" :title="col.row.udp">{{col.row.udp ? col.row.udp : '--'}}</div>
+                    </template>
+                </el-table-column> -->
+
+                <div slot="empty" class="table_slot_empty_text">
+                    <div><img src="../../../layouts/images/nodata.png" /></div>
+                    <div>暂无数据</div>
+                </div>
+            </el-table>
+            <div class="pagination-section">
+                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="pageNo" background :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="totalCount">
+                </el-pagination>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+import TableHeight from "~/mixins/tableheight";
+import Search from "~/components/common/Search";
+import SearchResult from "~/components/common/SearchResult.vue";
+import MoreOperating from "~/components/common/MoreOperatingEdit";
+import Modal from "~/components/Modal";
+import { mapActions, mapState } from "vuex";
+
+export default {
+  props: { operationId: Number, flag: String },
+  name: "DigitalAttrList",
+  mixins: [TableHeight],
+  components: {
+    Search,
+    SearchResult,
+    MoreOperating,
+    Modal
+  },
+  data() {
+    return {
+      productName: "",
+      goodsDigitalAttrList: [],
+      oneGoodsList: [],
+      pageSize: 10,
+      pageNo: 1,
+      totalCount: 0,
+      skuArray: [],
+      showResetButton: false,
+      isShowSearchResult: false,
+      isClick: false,
+      goodsPropertyCols: [],
+      searchItemValueArray: [],
+      isClear: false
+    };
+  },
+  watch: {
+    flag: function(nval, oval) {
+      console.log(nval, oval,"flag");
+      this.pageNo = 1;
+      this.pageSize = 10;
+      this.refreshPage();
+    },
+    operationId: function(nval, oval) {
+      console.log(nval, oval,"operationId");
+      if (oval != 1 && nval != oval) {
+          this.pageNo = 1;
+        this.pageSize = 10;
+        this.refreshPage();
+      }
+    }
+  },
+  mounted() {
+    console.log(222);
+    this.refreshPage();
+    // this.setTableHeight(280);
+  },
+  methods: {
+    ...mapActions([
+      "goodsDigitalAttrAdd",
+      "goodsDigitalAttrEdit",
+      "queryGoodsDigitalAttrList",
+      "showPageLoading",
+      "hidePageLoading"
+    ]),
+    getReset() {
+      console.log(333);
+      this.showResetButton = false;
+      this.isShowSearchResult = false;
+      this.isClick = false;
+      this.productName = "";
+      this.refreshPage();
+    },
+    getDeleteItem(index) {
+      this.searchItemValueArray.splice(index);
+      this.isClear = true;
+      this.productName = "";
+      this.refreshPage();
+    },
+    refreshPage() {
+      let that = this;
+      this.showPageLoading();
+      var resData = {
+        pageSize: this.pageSize,
+        pageNo: this.pageNo,
+        searchKey: this.productName.trim()
+      };
+      this.queryGoodsDigitalAttrList(resData)
+        .then(resp => {
+          that.hidePageLoading();
+          resp.result.forEach(one => {
+            one.has_show_more = false;
+            // 给记录添加是否已展开标记，true的话表示已经展开，false表示没有展开
+          });
+          that.goodsDigitalAttrList = resp.result;
+          // that.$nextTick(function() {
+          //     for (let iii = 0; iii < that.goodsDigitalAttrList.length; iii++) {
+          //         that.goodsDigitalAttrList[iii]['goodsPropertyCols'] = [];
+          //         for (const key in that.goodsDigitalAttrList[iii]) {
+          //             if (that.goodsDigitalAttrList[iii].hasOwnProperty(key) && key.slice(0, 3) == "udp") {
+          //                 that.goodsDigitalAttrList[iii]['goodsPropertyCols'].push({
+          //                     name: key,
+          //                     udp: that.goodsDigitalAttrList[iii][key]
+          //                 })
+          //             }
+          //         }
+          //         that.goodsPropertyCols = that.goodsDigitalAttrList[iii].goodsPropertyCols;
+          //     }
+          //     console.log(that.goodsPropertyCols)
+          // });
+
+          that.totalCount = resp.totalCount;
+        })
+        .catch({});
+    },
+    //模糊查询
+    onSearchGood(searchValue) {
+      this.productName = searchValue;
+      this.isClick = true;
+      this.isClear = false;
+      this.searchItemValueArray = [searchValue];
+      this.refreshPage();
+    },
+    searchEnterFun(e) {
+      var keyCode = window.event ? e.keyCode : e.which;
+      //  console.log('回车搜索',keyCode,e);
+      if (keyCode == 13 && this.productName) {
+        this.refreshPage();
+      } else {
+        this.refreshPage();
+      }
+    },
+    viewGoods(id) {
+      this.$router.push(`/goods/view/${id}`);
+      sessionStorage.setItem("goodsSkuId", id);
+      sessionStorage.setItem("cateId", this.flag);
+    },
+    //点击编辑
+    clickEdit(currentProductData) {
+      console.log(currentProductData);
+      sessionStorage.setItem(
+        "digitalAttrEditData",
+        JSON.stringify(currentProductData)
+      );
+      this.$router.push({ path: `/goods/manage/digitalAttrEdit` });
+    },
+    showMore(index, row) {
+      var id = row.productId;
+      if (!row["has_show_more"]) {
+        if (this.isLoading) {
+          return false;
+        }
+        var reqData = {
+          productId: id
+        };
+        this.showPageLoading();
+        this.queryGoodsListSku(reqData)
+          .then(resp => {
+            resp.forEach(one => {
+              one.isSubContent = true;
+              one.productId = " ";
+              one.productName = one.skuName;
+              // one.sub_show = true          //给返回的子列表添加字段作为标记，true的时候表示是展开的内容，没有该字段表示不是展开的内容
+            });
+            resp.forEach(item => {
+              item.skuAttrsNew = "";
+              if (item.skuAttrs && item.skuAttrs.length > 0) {
+                item.skuAttrs.forEach(one => {
+                  item.skuAttrsNew += one.attrValue + ",";
+                });
+                item.skuAttrsNew = item.skuAttrsNew.substring(
+                  0,
+                  item.skuAttrsNew.length - 1
+                );
+              }
+            });
+            this.oneGoodsList = resp;
+            this.goodsList[index].sub_show_length = resp.length; //给展开的记录添加展开的内容长度标记
+            this.goodsList.splice(index + 1, 0, ...this.oneGoodsList);
+            this.goodsList[index].has_show_more = true; //设置标记已展开
+            this.hidePageLoading();
+          })
+          .catch(() => {
+            this.hidePageLoading();
+          });
+      } else {
+        let length = this.goodsList[index].sub_show_length; //获取要删除的长度
+        this.goodsList.splice(index + 1, length); //删除展开的内容
+        this.goodsList[index].has_show_more = false; //设置标记未展开
+        this.goodsList[index].sub_show_length = 0;
+      }
+    },
+    packUp(index, id) {},
+    handleSizeChange(nSize) {
+      this.pageSize = nSize;
+      this.refreshPage(this.flag);
+    },
+    handleCurrentChange(nPage) {
+      this.pageNo = nPage;
+      this.refreshPage(this.flag);
+    },
+    goStockManage(skuId) {
+      // this.$router.push(`/stock/management`)
+      // sessionStorage.setItem('goodsSkuId',skuId);
+    }
+  }
+};
+</script>
+<style lang="scss">
+.goods-list {
+    height: 100%;
+  .search-component {
+    right: 0px;
+  }
+  .search {
+    margin-top: 20px;
+  }
+  .table-wrapper {
+    overflow-y: hidden;
+    .row-btn-show div {
+      color: black;
+      cursor: default;
+    }
+  }
+}
+
+</style>

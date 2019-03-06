@@ -1,0 +1,206 @@
+<template>
+    <el-row class="viewPurchase detailsBigBox">
+        <!-- 左边信息 -->
+        <el-row  class="viewPurchaseLeft DetailsLeftBox">
+            <div class="viewLeftTop">
+                <el-row >
+                        <h4 class="order">供应商名称：{{ vendorRegisterForm.vendorName}}</h4>
+                        <h4 class="status goodsStatus">引进状态：<span v-if="vendorRegisterForm.importStatus == 1">已引进</span><span v-if="vendorRegisterForm.importStatus == 0">未引进</span></h4>
+                        <h4 class="status">审批状态：<span v-if="vendorRegisterForm.approveStatus == 0">草稿</span><span v-if="vendorRegisterForm.approveStatus == 1">审批通过</span></h4>
+                </el-row>
+            </div>
+            <!-- <el-row> -->
+            <el-row class="viewPurchaseRight DetailsRightBox" >
+                <h3>联系信息</h3>
+                <el-form :modle="vendorRegisterForm" label-position="left" class="TotalBasic">
+                    <el-form-item label="联系人：">
+                        <span>{{vendorRegisterForm.linkman ? vendorRegisterForm.linkman : '--'}}</span>
+                    </el-form-item>
+                    <el-form-item label="联系电话：">
+                        <span>{{vendorRegisterForm.phoneNum ? vendorRegisterForm.phoneNum : '--'}}</span>
+                    </el-form-item>
+                    <el-form-item label="邮箱：">
+                        <span>{{vendorRegisterForm.email ? vendorRegisterForm.email : '--'}}</span>
+                    </el-form-item>
+                </el-form>
+            </el-row>
+            <el-row style="padding-left:20px;">
+                 <el-button type="primary" size="small"  @click="goBack()">返回</el-button>  
+            </el-row>
+            <!-- </el-row> -->
+        </el-row>
+        <!--右边基本信息-->
+        <el-row class="viewPurchaseRight DetailsRightBox" >
+            <h3>基本信息</h3>
+            <el-form :modle="vendorRegisterForm" label-position="left" class="TotalBasic">
+              <el-form-item label="注册时间：">
+                  <span>{{vendorRegisterForm.registerTime ? vendorRegisterForm.registerTime : '--'}}</span>
+              </el-form-item>
+              <el-form-item label="地址：">
+                  <span>{{vendorRegisterForm.address ? vendorRegisterForm.address : '--'}}</span>
+              </el-form-item>
+              <el-form-item label="简介：">
+                  <span style="word-wrap: break-word;">{{vendorRegisterForm.introduce ? vendorRegisterForm.introduce : '--'}}</span>
+              </el-form-item>
+              <el-form-item label="备注：">
+                  <span style="word-wrap:break-word">{{vendorRegisterForm.comments ? vendorRegisterForm.comments : '--'}}</span>
+              </el-form-item>
+            </el-form>
+        </el-row>
+    </el-row>
+</template>
+<script>
+    import {routesMapping} from '~/router'
+    import {mapActions, mapState} from 'vuex'
+    import platform from '~/mixins/platform';
+    import QuitMixins from '~/mixins/quit';
+    import Modal from '~/components/common/Modal.vue';
+    export default {
+        name: 'vendorRegisterDetails',
+        mixins: [platform,QuitMixins],
+        components: {},
+        data() {
+            return {
+                // 需要提交的表单数据
+                vendorRegisterForm: {},
+            }
+        },
+        mounted(){
+            this.refreshPage();
+        },
+        activated() {
+           this.refreshPage();
+        },
+        methods: {
+            ...mapActions(["purchaseVendorregisterQuery","showPageLoading", "hidePageLoading"]),
+            refreshPage(){
+                let datas = {
+                    id: this.$route.params.id,
+                }
+              this.purchaseVendorregisterQuery(datas).then((res) =>{
+                this.vendorRegisterForm = res
+              })
+            },
+            //去编辑页面
+            // editPurchaseOrder(){
+            //     this.shiftPage(routesMapping.EditPurchase,`/purchase/EditPurchase/${this.purchaseId}`)
+            // },
+            // 返回
+            goBack() {
+                this.$message({
+                    type: 'success',
+                    message: `操作成功`
+                })
+              this.quit(routesMapping.vendorRegisterIndex,true)
+            }
+        },
+    }
+</script>
+<style lang='scss'>
+    .viewPurchase{
+        .stepDiv{
+            color:#666666;
+            padding:22px 22px 0 22px;
+            .el-col.el-col-3{
+                div{
+                    text-align:center;
+                }
+            }
+            .styleTime, .styleStepName{
+                font-size:14px;
+                color:#333333;
+                line-height:30px;
+            }
+            .styleStepName{
+                margin-left:30px;
+            }
+            .stepVerticalLine{
+                width:1px;
+                height:30px;
+                background-color:#ECEEF5;
+                margin:14px 0 0px 6.2%;
+            }
+        }
+        .orderBox{
+            background-color: white;  margin-top:20px;
+            .orderContainer{
+                background-color: #FBFBFB; padding: 0px 20px; border: 1px solid #F1F1F1; height: 50px;
+                line-height: 50px;
+                .orderCount{
+                    float: right;
+                    span{
+                        color: red; font-size: 18px;
+                    }
+                }
+            }
+        }
+        .goodsStatus{
+            i{
+                font-style:normal;
+            }
+        }
+        table{
+            width: 100% !important;
+        }
+        .el-table {
+            font-size: 12px;
+            color: #888;
+            border: 1px solid #eceef5;
+            border-bottom: none;
+        }
+        .el-table__empty-block {
+            border-bottom: 1px solid #eceef5;
+        }
+        padding:20px 20px 0 20px;
+        .editDetailsDialogTab{
+            margin-top:20px;
+        }
+        .model-container {
+            height: auto;
+        }
+        .el-form-item__label{
+            font-size: 12px;
+            line-height: 24px!important;
+            color:#666666;
+        }
+        .el-form-item__content{
+            line-height: 24px!important;
+            font-size: 12px;
+            span{
+                color:#333333;
+            }
+        }
+        .el-table th, .el-table tr{
+            font-size: 12px;
+        }
+        .edieOrderDetailsLeft{
+            width:77%;
+            display:inline-block;
+        }
+        .edieOrderDetailsRight{
+            border:1px solid #ECEEF5;
+        }
+        .edieOrderDetailsRight{
+            width:21%; display:inline-block; margin-left:10px; padding:20px; vertical-align: top; background-color: white;
+            h3{
+                margin-bottom:10px;font-size:14px;
+            }
+            .IndexNum{
+                i{
+                    font-style:normal;
+                }
+            }
+            .el-form-item{
+                margin-bottom:5px;
+            }
+        }
+    }
+    .page-content{
+        background: #e9eef1;
+    }
+</style>
+<style lang='scss' scoped>
+    .procurements-config-wrapper{
+        overflow:inherit;
+    }
+</style>

@@ -1,0 +1,271 @@
+<template>
+    <div class="general-price">
+        <div>
+          <search class="showInline" @searchValue="getSearchValue" :showPlaceholder="PlaceholderName" :showResetButton="showResetButton" @reset="getReset" :isShowSearchResult="isShowSearchResult" :count="totalCount"></search>
+        </div>
+        <div class="search_result_container" v-if="searchItemValueArray.length>0">
+            <search-result :searchItemValueArray="searchItemValueArray" :count="totalCount" @deleteItem="getDeleteItem"></search-result>
+        </div>
+        <div class="table-wrapper">
+        <el-table
+            ref="multipleTable"
+            :data="tableData"
+            class="setFixedHeight"
+            tooltip-effect="dark"
+            style="width: 100%">
+
+                <el-table-column label="商品名称" prop="skuName" min-width="200">
+                    <template slot-scope="scope">
+                        <div class="row-btn-show">
+                            <div class="row-show" :title="scope.row.skuName">{{scope.row.skuName}}</div>
+                            <MoreSKUCommodityManagement  @onDelete="deleteThat({skuId: scope.row.skuId})" @onEdit="editTaht(scope.row)" @onDetails="details(scope.row)"></MoreSKUCommodityManagement>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="商品编码" prop="skuId" min-width="80"></el-table-column>
+                <el-table-column label="条码" prop="skuBarCode" min-width="80"></el-table-column>
+                <el-table-column label="税率(%)" prop="taxRate" min-width="80"></el-table-column>
+                <el-table-column label="成本价(元)" prop="skuCost" min-width="80"></el-table-column>
+                <el-table-column label="建议零售价(元)" prop="skuPrice" min-width="80"></el-table-column>
+
+                <div slot="empty" class="table_slot_empty_text">
+                    <div><img src="../../../layouts/images/nodata.png" /></div>
+                    <div>暂无数据</div>
+                </div>
+            </el-table>
+        <div class="pagination">
+            <el-pagination
+                v-if="paginationShow"
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page.sync="pageNo"
+                :page-sizes="pageSizesList"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="totalCount">
+            </el-pagination>
+        </div>
+        </div>
+    </div>
+</template>
+<script>
+import { mapActions, mapState } from "vuex";
+import PlatformMixins from "~/mixins/platform";
+import TableHeight from "~/mixins/tableheight";
+import Search from "~/components/common/Search";
+import SearchResult from "~/components/common/SearchResult.vue";
+import MoreSKUCommodityManagement from "~/components/common/MoreSKUCommodityManagement";
+
+export default {
+  name: "sku-commodity-management-List",
+  mixins: [TableHeight, PlatformMixins],
+  components: {
+    Search,
+    SearchResult,
+    MoreSKUCommodityManagement
+  },
+  data() {
+    return {
+      tableData: [], // 表单数据
+      conditionData: [], // 查询表格数据
+      showResetButton: false,
+      isShowSearchResult: false,
+      totalCount: 0,
+      paginationShow: true, //分页组件
+      cardNumber: "",
+      pageNo: 1, // 当前页
+      pageSizesList: [10, 20, 30, 40, 50, 100],
+      pageSize: 10,
+      productId: 0,
+      cateIdFirst: 0,
+      cateIdSecond: 0,
+      cateIdThird: 0,
+      productName: "",
+      searchKey: "",
+      skuId: 0,
+      skuName: "",
+      PlaceholderName: '请输入商品名称或编码进行查询',
+      searchItemValueArray: [],
+      isClear: false
+    };
+  },
+  props: {operationId: Number,flag: String, level: Number},
+  watch: {
+    level: function(cateLevel) {
+      console.log(cateLevel, "level");
+      this.level = cateLevel;
+    },
+    flag: function(nval, oval) {
+      console.log(nval, oval, "flag");
+      this.pageSize = 10;
+      this.pageNo = 1;
+      if (this.level == 1) {
+        console.log(111111111);
+        this.cateIdFirst = nval;
+        this.cateIdSecond = "";
+        this.cateIdThird = "";
+      } else if (this.level == 2) {
+        console.log(222222222);
+        this.cateIdFirst = "";
+        this.cateIdSecond = nval;
+        this.cateIdThird = "";
+      } else if (this.level == 3) {
+        console.log(333333333);
+        this.cateIdFirst = "";
+        this.cateIdSecond = "";
+        this.cateIdThird = nval;
+      }
+      this.checkTableInfor();
+    },
+    operationId: function (nval) {
+      console.log(nval, "operationId");
+      this.checkTableInfor();
+    }
+  },
+  mounted() {
+    this.checkTableInfor();
+    // this.setTableHeight(275);
+  },
+  computed: {
+    ...mapState({})
+  },
+  methods: {
+    ...mapActions([
+      "showPageLoading",
+      "hidePageLoading",
+      "skuCommodityManagementQuerylistpage",
+      "skuCommodityManagementDelete",
+    ]),
+    initData() {
+      this.getReset()
+    },
+    // 回车搜索
+    searchEnterFun(e) {
+      var keyCode = window.event ? e.keyCode : e.which;
+      //  console.log('回车搜索',keyCode,e);
+      if (keyCode == 13 && this.productName) {
+        this.refreshPage(this.flag);
+      } else {
+        this.refreshPage(this.flag);
+      }
+    },
+    // 搜索
+    getSearchValue(searchValue) {
+      this.searchKey = searchValue;
+      this.isSearch = true;
+      this.isClear = false;
+      this.searchItemValueArray = [searchValue];
+      this.refreshPage();
+    },
+    // 搜索重置
+    getReset() {
+      this.showResetButton = false;
+      this.isShowSearchResult = false;
+      this.searchKey = "";
+      this.isSearch = false;
+      this.checkTableInfor();
+      this.manner = this.status = "";
+    },
+    getDeleteItem(index) {
+      this.searchItemValueArray.splice(index);
+      this.isClear = true;
+      this.searchKey = ""
+      this.refreshPage();
+    },
+    // 获取列表数据
+    queryReturnListFunction(param) {
+      this.checkTableInfor();
+    },
+    // 重新调用查询列表数据
+    refreshPage(nval) {
+      this.showPageLoading();
+      this.queryReturnListFunction(nval);
+    },
+    // 查询表格数据
+    checkTableInfor() {
+      this.showPageLoading();
+      const data = {
+        pageSize: this.pageSize,
+        pageNo: this.pageNo,
+        cateIdFirst: this.cateIdFirst,
+        cateIdSecond: this.cateIdSecond,
+        cateIdThird: this.cateIdThird,
+        searchKey: this.searchKey,
+      };
+      this.skuCommodityManagementQuerylistpage(data).then(res => {
+        this.hidePageLoading();
+        this.totalCount = res.totalCount;
+        if (this.totalCount == 0 || this.totalCount == null || this.totalCount == "") {
+          this.paginationShow = false
+        }
+        this.tableData = res.result;
+        this.tableData.forEach(function (i, k) {
+            i.skuCost = (Number(i.skuCost) / 100).toFixed(2)
+            i.skuPrice = (Number(i.skuPrice) / 100).toFixed(2)
+        });
+        console.log(this.tableData,"123");
+      });
+    },
+    // 列表删除
+    deleteThat(id) {
+      // 删除该行表格数据
+      this.$confirm("此操作将删除该条信息, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          this.skuCommodityManagementDelete(id).then(res => {
+            this.$message("删除成功");
+            this.checkTableInfor();
+          });
+        })
+        .catch(err => {});
+    },
+    // 列表编辑
+    editTaht(data) {
+      sessionStorage.setItem("skuCommodityManagementEditTaht", JSON.stringify(data));
+      this.$router.push({
+        path: `/goods/manage/editSkuCommodityManagement?skuId=${data.skuId}`
+      });
+    },
+    // 跳转查询页面
+    details(data) {
+      sessionStorage.setItem("skuCommodityManagementEditTaht", JSON.stringify(data));
+      this.$router.push({
+        path: `/goods/manage/detailsSkuCommodityManagement?skuId=${data.skuId}`
+      });
+    },
+    // 修改pagesize
+    handleSizeChange(nSize) {
+      this.pageSize = nSize;
+      this.pageNo = 1;
+      this.checkTableInfor();
+    },
+    // 表格下方页数操作
+    handleCurrentChange(val) {
+      console.log(111111111111111111111111111111,val)
+      this.pageNo = val;
+      this.checkTableInfor();
+      this.manner = this.status = "";
+    },
+  }
+};
+</script>
+<style lang="scss" scoped>
+.general-price {
+  height: 100%;
+  padding: 20px 0 0 0;
+  .table-wrapper {
+    overflow-y: hidden;
+    .row-btn-show div {
+      color: black;
+      cursor: default;
+    }
+  }
+  .pagination {
+    float: right;
+    margin-top: 30px;
+  }
+}
+</style>

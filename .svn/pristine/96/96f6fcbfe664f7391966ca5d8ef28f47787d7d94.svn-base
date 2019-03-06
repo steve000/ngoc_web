@@ -1,0 +1,90 @@
+@font-face {font-family: "iconfont2";
+    src: url('~/layouts/css/font/iconfont.eot?t=1524534638008'); /* IE9*/
+    src: url('~/layouts/css/font/iconfont.eot?t=1524534638008#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('~/layouts/css/font/iconfont.woff?t=1524534638008') format('woff'), /* chrome, firefox */
+    url('~/layouts/css/font/iconfont.ttf?t=1524534638008') format('truetype'), /* chrome, firefox, opera, Safari, Android, iOS 4.2+*/
+    url('~/layouts/css/font/iconfont.svg?t=1524534638008#iconfont') format('svg'); /* iOS 4.1- */
+}
+
+.iconfont {
+  font-family:"iconfont2" !important;
+  font-size:16px;
+  font-style:normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+[class^="icon-"], [class*=" icon-"] {
+    /* use !important to prevent issues with browser extensions that change fonts */
+    font-family: 'iconfont2' !important;
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+
+    /* Better Font Rendering =========== */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.icon-shibai:before { content: "\e626"; }
+
+.icon-gerenxinxi:before { content: "\e670"; }
+
+.icon-73dengdai:before { content: "\e64c"; }
+
+.icon-xiazai:before { content: "\e675"; }
+
+.icon-tishi:before { content: "\e645"; }
+
+.icon-gerenxinxi1:before { content: "\e60e"; }
+
+.icon-chenggong:before { content: "\e610"; }
+
+.icon-gongsixinxi:before { content: "\e618"; }
+
+.icon-gongsi:before { content: "\e79e"; }
+
+.icon-wushuju:before { content: "\e642"; }
+
+.icon-guanlian:before { content: "\e608"; }
+
+.icon-xialajiantou:before { content: "\e65d"; }
+
+.icon-tianjia:before { content: "\e65e"; }
+
+.icon-zuojiantou:before { content: "\e65f"; }
+
+.icon-bianji:before { content: "\e660"; }
+
+.icon-rili:before { content: "\e661"; }
+
+.icon-shijian:before { content: "\e662"; }
+
+.icon-shaixuanxiang:before { content: "\e663"; }
+
+.icon-shanchuhang:before { content: "\e664"; }
+
+.icon-guanbi:before { content: "\e665"; }
+
+.icon-sousuo:before { content: "\e666"; }
+
+.icon-youjiantou:before { content: "\e667"; }
+
+.icon-quanbu:before { content: "\e668"; }
+
+.icon-ren:before { content: "\e669"; }
+
+.icon-yichangdingdan:before { content: "\e66a"; }
+
+.icon-xiaoxi:before { content: "\e66b"; }
+
+.icon-chenggong1:before { content: "\e66c"; }
+
+.icon-jingshi:before { content: "\e66d"; }
+
+.icon-xiazai1:before { content: "\e66e"; }
+
+.icon-daishoudingdan:before { content: "\e66f"; }
+
+.icon-daifadingdan:before { content: "\e697"; }

@@ -1,0 +1,823 @@
+<template>
+    <div class='createPurchase-view'>
+        <!-- 基本信息 -->
+        <div class="content">
+            <div class="title">
+                <div>基本信息</div>
+            </div>
+            <div class="content-wrapper" >
+              <div v-if="fromType">
+                <el-form label-width="150px" :model="vendorSpuAddForm" :rules="vendorSpuAddValidate" ref="vendorSpuAddForm">
+                    <div>
+                        <div class="displayStyle">
+                            <el-form-item label="供应商名称：" prop="vendorName">
+                              <el-select :multiple="false" filterable clearable @change="changeVendorNameFun" v-model="vendorSpuAddForm.vendorName" placeholder="请填写供应商名称" class="row_width" size="small">
+                                  <el-option v-for="(item, index) in vendorNameList" :key='index' :value='item.vendorId' :label="item.vendorName"></el-option>
+                                </el-select>
+                            </el-form-item>
+                        </div>
+                        <div class="displayStyle">
+                            <el-form-item label="供应商编码：" prop="vendorId">
+                              <el-input v-model="vendorSpuAddForm.vendorId" placeholder="请填写供应商编码" type="text" class="row_width" size="small" disabled>
+                                </el-input>
+                            </el-form-item>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="displayStyle">
+                            <el-form-item label="产品名称：" prop="productName">
+                              <el-input v-model="vendorSpuAddForm.productName" placeholder="请填写产品名称" type="text" class="row_width" size="small">
+                                </el-input>
+                            </el-form-item>
+                        </div>
+                        <div class="displayStyle">
+                            <el-form-item label="单位：" prop="unitId">
+                              <el-input v-model="vendorSpuAddForm.unitId" v-number-decimal-only placeholder="请填写单位" type="number" class="row_width" size="small">
+                                </el-input>
+                            </el-form-item>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="displayStyle">
+                            <el-form-item label="采购价（元）：" prop="price">
+                              <el-input v-model="vendorSpuAddForm.price" v-number-decimal-only placeholder="请填写采购价" type="number" v-number-only class="row_width" size="small">
+                                </el-input>
+                            </el-form-item>
+                        </div>
+                    </div>
+
+                    <div>
+                      <div class="displayStyle">
+                          <el-form-item label="规格：">
+                            <el-input type="textarea" :rows="6"
+                                      v-model="vendorSpuAddForm.standard" :maxlength="200" placeholder="请输入规格，最多200个字" size="small" style="width:775px;"></el-input>
+                            <span style="display:block">{{vendorSpuAddForm.standard.length}}/200</span>
+                          </el-form-item>
+                        </div>
+                    </div>
+                    <div>
+                      <div class="displayStyle">
+                          <el-form-item label="简介：">
+                            <el-input type="textarea" :rows="6"
+                                      v-model="vendorSpuAddForm.introduce" :maxlength="200" placeholder="请输入简介，最多200个字" size="small" style="width:775px;"></el-input>
+                            <span style="display:block">{{vendorSpuAddForm.introduce.length}}/200</span>
+                          </el-form-item>
+                        </div>
+                    </div>
+                    <div>
+                      <div class="displayStyle">
+                          <el-form-item label="备注：">
+                            <el-input type="textarea" :rows="6"
+                                      v-model="vendorSpuAddForm.remark" :maxlength="200" placeholder="请输入备注，最多200个字" size="small" style="width:775px;"></el-input>
+                            <span style="display:block">{{vendorSpuAddForm.remark.length}}/200</span>
+                          </el-form-item>
+                        </div>
+                    </div>
+
+
+
+                    <div class="title">
+                        <div>产品图片</div>
+                    </div>
+                    <div class="content-wrapper" >
+                      <div>
+                          <el-dialog :visible.sync="dialogVisible">
+                            <img width="100%" :src="dialogImageUrl" alt="">
+                          </el-dialog>
+                          <div class="displayStyle">
+                              <el-upload
+                                v-if="!imageUrl1"
+                                class="avatar-uploader"
+                                action=""
+                                :show-file-list="false"
+                                :before-upload="upload1">
+                                <i class="el-icon-plus avatar-uploader-icon"></i>
+                              </el-upload>
+                              <img v-if="imageUrl1" :src="imageUrl1" class="avatar" @click="enlarge('1')">
+                              <div class="textInfo" style="text-align:center">主图</div>
+                              <div class="clearImg" style="text-align:center">
+                                <el-button type="primary" size="small" style="margin-top:10px;display:inline-block;" @click="handleRemoveImg('1')">删除</el-button> 
+                              </div>
+                          </div>
+                          <div class="displayStyle">
+                              <el-upload
+                                v-if="!imageUrl2"
+                                class="avatar-uploader"
+                                action=""
+                                :show-file-list="false"
+                                :before-upload="upload2">
+                                <i class="el-icon-plus avatar-uploader-icon"></i>
+                              </el-upload>
+                              <img v-if="imageUrl2" :src="imageUrl2" class="avatar" @click="enlarge('2')">
+                              <div class="textInfo" style="text-align:center">正面</div>
+                              <div class="clearImg" style="text-align:center">
+                                <el-button type="primary" size="small" style="margin-top:10px;display:inline-block;" @click="handleRemoveImg('2')">删除</el-button> 
+                              </div>
+                          </div>
+                          <div class="displayStyle">
+                              <el-upload
+                                v-if="!imageUrl3"
+                                class="avatar-uploader"
+                                action=""
+                                :show-file-list="false"
+                                :before-upload="upload3">
+                                <i class="el-icon-plus avatar-uploader-icon"></i>
+                              </el-upload>
+                              <img v-if="imageUrl3" :src="imageUrl3" class="avatar" @click="enlarge('3')">
+                              <div class="textInfo" style="text-align:center">背面</div>
+                              <div class="clearImg" style="text-align:center">
+                                <el-button type="primary" size="small" style="margin-top:10px;display:inline-block;" @click="handleRemoveImg('3')">删除</el-button> 
+                              </div>
+                          </div>
+
+                          <div class="displayStyle">
+                              <el-upload
+                                v-if="!imageUrl4"
+                                class="avatar-uploader"
+                                action=""
+                                :show-file-list="false"
+                                :before-upload="upload4">
+                                <i class="el-icon-plus avatar-uploader-icon"></i>
+                              </el-upload>
+                              <img v-if="imageUrl4" :src="imageUrl4" class="avatar" @click="enlarge('4')">
+                              <div class="textInfo" style="text-align:center">侧面</div>
+                              <div class="clearImg" style="text-align:center">
+                                <el-button type="primary" size="small" style="margin-top:10px;display:inline-block;" @click="handleRemoveImg('4')">删除</el-button> 
+                              </div>
+                          </div>
+
+                          
+                      </div>
+             
+                    </div>
+                </el-form>
+              </div>
+              <div v-else>
+                <el-form label-width="150px" :model="vendorSpuImportAddForm" :rules="rules2" ref="vendorSpuImportAddForm">
+                    <div>
+                        <div class="displayStyle">
+                            <el-form-item label="产品名称：" prop="SpuProductName">
+                              <el-input v-model="vendorSpuImportAddForm.SpuProductName" placeholder="请填写产品名称" type="text" class="row_width" size="small">
+                                </el-input>
+                            </el-form-item>
+                        </div>
+                    </div>
+
+                    <div>
+                      <div class="displayStyle">
+                            <el-form-item label="产品分类：" prop="cateNameFirst">
+                              <el-select :multiple="false" filterable clearable @change="change1" v-model="vendorSpuImportAddForm.cateNameFirst" placeholder="一级品类" class="row_width" size="small">
+                                <el-option  v-for="(one) in cateIdFirstList" :key='one.cateId' :value='one.cateId' :label="one.cateName"></el-option>
+                              </el-select>
+                            </el-form-item>
+                            <el-form-item prop="cateNameSecond">
+                              <el-select  :multiple="false" filterable clearable @change="change2" v-model="vendorSpuImportAddForm.cateNameSecond" placeholder="二级品类" class="row_width" size="small">
+                                <el-option v-for="(one) in cateIdSecondList" :key='one.cateId' :value='one.cateId' :label="one.cateName"></el-option>
+                              </el-select>
+                            </el-form-item>
+                        </div>
+                        <!-- <div class="displayStyle">
+                            
+                        </div> -->
+                    </div>
+
+                    <div>
+                        <div class="displayStyle">
+                            <el-form-item label="品牌：" prop="brandCnName">
+                              <el-select :multiple="false" filterable clearable @change="changeBrandFun()" v-model="vendorSpuImportAddForm.brandId" placeholder="请填写品牌" class="row_width" size="small">
+                                <el-option v-for="(one) in brandList" :key='one.brandId' :value='one.brandId' :label="one.brandCnName"></el-option>
+                              </el-select>
+                            </el-form-item>
+                        </div>
+                    </div>
+
+                    <div>
+                      <div class="displayStyle">
+                          <el-form-item label="产品简介：">
+                            <el-input type="textarea" :rows="6"
+                                      v-model="vendorSpuImportAddForm.introduce" placeholder="请输入产品简介" size="small" style="width:735px;"></el-input>
+                          </el-form-item>
+                        </div>
+                    </div>
+                </el-form>
+              </div>
+            </div>
+        </div>
+        <div class="btn-section pt20" v-if="fromType">
+            <el-button  type="primary" @click="savePurchase('vendorSpuAddForm')" size="small">保存</el-button>
+            <el-button type="primary" plain size="small"  class="cancel-button" @click="OnBackLatePage('vendorSpuAddForm')">取消</el-button>
+        </div>
+        <div class="btn-section pt20" v-else>
+            <el-button  type="primary" @click="savePurchase('vendorSpuImportAddForm')" size="small">保存</el-button>
+            <el-button type="primary" plain size="small"  class="cancel-button" @click="OnBackLatePage('vendorSpuImportAddForm')">取消</el-button>
+        </div>
+    </div>
+</template>
+<script>
+import { mapActions, mapState } from "vuex";
+import MessageMixins from "~/mixins/messages";
+import PlatformMixins from "~/mixins/platform";
+import QuitMixins from "~/mixins/quit";
+import { directives } from '~/utils/directives/index'
+import { routesMapping } from "~/router";
+export default {
+  name: "vendorSpuAdd",
+  mixins: [MessageMixins, PlatformMixins, QuitMixins],
+  components: {},
+  data() {
+    //正则校验
+    let vendorName = (rule, value, callback) => {
+        if (!value) {
+            return callback(new Error('请填写供应商名称!'));
+        } else {
+            return callback();
+        }
+    }
+    let productName = (rule, value, callback) => {
+        if (!value) {
+            return callback(new Error('请填写产品名称!'));
+        } else {
+            return callback();
+        }
+    }
+    let unitId = (rule, value, callback) => {
+        if (!value) {
+            return callback(new Error('请填写单位!'));
+        } else {
+            return callback();
+        }
+    }
+    let price = (rule, value, callback) => {
+        if (!value) {
+            return callback(new Error('请填写采购价!'));
+        } else {
+            return callback();
+        }
+    }
+    let introduce = (rule, value, callback) => {
+        if (!value) {
+            return callback(new Error('请填写供应商名称!'));
+        } else {
+            return callback();
+        }
+    }
+    let cateNameFirst = (rule, value, callback) => {
+        if (!value) {
+            return callback(new Error('请填写一级品类!'));
+        } else {
+            return callback();
+        }
+    }
+    let cateNameSecond = (rule, value, callback) => {
+        if (!value) {
+            return callback(new Error('请填写二级品类!'));
+        } else {
+            return callback();
+        }
+    }
+    let brandCnName = (rule, value, callback) => {
+        if (!value) {
+            return callback(new Error('请填写品牌!'));
+        } else {
+            return callback();
+        }
+    }
+    let SpuProductName = (rule, value, callback) => {
+        if (!value) {
+            return callback(new Error('请填写产品名称!'));
+        } else {
+            return callback();
+        }
+    }
+    return {
+      // 需要提交的表单数据
+      vendorSpuAddForm: {
+        vendorId: "",
+        vendorName: "",
+        productName: "",
+        unitId: "",
+        price: "",
+        introduce: "",
+        remark: "",
+        standard: "",
+        productPicList: [
+          // {
+          //   picName: "",
+          // }
+        ]
+      },
+      vendorSpuImportAddForm: {
+        id: '',
+        importStatus: '',
+        SpuProductName: '',
+        productName: '',
+        cateIdFirst: '',
+        cateIdSecond: '',
+        cateNameFirst: '',
+        cateNameSecond: '',
+        brandId: '',
+        brandCnName: '',
+        introduce: '',
+      },
+      fromType: '',
+      dialogImageUrl: '',
+      dialogVisible: false,
+      masterGraph: '',
+      positive: '',
+      back: '',
+      side: '',
+      vendorSpuAddValidate: {
+          vendorName: [{required: true, validator: vendorName, trigger: 'change'}],
+          productName: [{required: true, validator: productName, trigger: 'change'}],
+          unitId: [{required: true, validator: unitId, trigger: 'change'}],
+          price: [{required: true, validator: price, trigger: 'change'}],
+      },
+      rules2: {
+          introduce: [{required: true, validator: introduce, trigger: 'change'}],
+          SpuProductName: [{required: true, validator: SpuProductName, trigger: 'change'}],
+          cateNameFirst: [{required: true, validator: cateNameFirst, trigger: 'change'}],
+          cateNameSecond: [{required: true, validator: cateNameSecond, trigger: 'change'}],
+          brandCnName: [{required: true, validator: brandCnName, trigger: 'change'}],
+      },
+      datas:{
+        level:1,
+        parentCateId:'',
+      },
+      cateIdFirstList: [],
+      cateIdSecondList: [],
+      firstId: '',
+      brandList: [],
+      vendorNameList: [],
+      showFileList: [],
+      imageUrl1: '',
+      imageUrl2: '',
+      imageUrl3: '',
+      imageUrl4: '',
+      imgInfo1: {
+        picPath: '',
+        picPlace: '主图',
+      },
+      imgInfo2: {
+        picPath: '',
+        picPlace: '正面',
+      },
+      imgInfo3: {
+        picPath: '',
+        picPlace: '背面',
+      },
+      imgInfo4: {
+        picPath: '',
+        picPlace: '侧面',
+      },
+      AddInfo: {}
+    };
+  },
+  mounted() {
+    this.AddInfo = this.$route.params
+    console.log(this.AddInfo,"带过来的参数");
+    if (this.AddInfo.type == 'indexAdd') {
+      this.fromType = true
+      this.getVendorNameListFun()
+    } else if (this.AddInfo.type == 'listAdd') {
+      this.fromType = false
+      this.getCategoryList(this.datas);
+      this.getBrandList();
+      this.vendorSpuImportAddForm.id = this.AddInfo.id
+      this.vendorSpuImportAddForm.SpuProductName = this.AddInfo.productName
+      this.vendorSpuImportAddForm.introduce  = this.AddInfo.introduce
+      this.vendorSpuImportAddForm.importStatus  = this.AddInfo.importStatus
+    }
+    
+  },
+  computed: {},
+  directives: {
+    'number-only':function(el,binding,vnode){
+        console.log(el.value, 111);  //获取v-model的值
+    }
+  },
+  methods: {
+    ...mapActions([
+      "vendorQuerylistbyusergroupid",
+      "purchaseVendorspuAdd",
+      "purchaseVendorspuImport",
+      "showPageLoading",
+      "hidePageLoading",
+      "manageCategoryAll",
+      "manageBrandAll",
+      "purchaseVendorspuPictureupload"
+    ]),
+
+    // input不符合正则就不允许输入
+    isoOnkeypress(e) {
+      console.log(e, 111)
+      var keynum
+      var keychar
+      var numcheck
+      if (window.event) {
+        keynum = e.keyCode
+      }
+      else if (e.which) {
+        keynum = e.which
+      }
+      keychar = String.fromCharCode(keynum)
+      numcheck = /^\d+(\.\d{1,2})?$/
+      return !numcheck.test(keychar)
+    },
+
+
+
+    getVendorNameListFun() {
+      let obj = {
+        userGroupId: sessionStorage.getItem('entityId')
+      }
+      this.vendorQuerylistbyusergroupid(obj).then(res => {
+        this.vendorNameList = res.result
+      })
+    },
+    changeVendorNameFun(val) {
+      this.vendorNameList.forEach((item, index) => {
+        if (val == item.vendorId) {
+          this.vendorSpuAddForm.vendorName = item.vendorName
+          this.vendorSpuAddForm.vendorId = item.vendorNumber
+        }
+      })
+    },
+    savePurchase(Form) {
+      if (Form == 'vendorSpuAddForm') {
+        this.$refs[Form].validate((valid) => {
+          if (valid) {
+            this.vendorSpuAddForm.productPicList = []
+            this.vendorSpuAddForm.productPicList.splice(0, 0, this.imgInfo1, this.imgInfo2, this.imgInfo3, this.imgInfo4)
+            let datas = {};
+            datas = this.vendorSpuAddForm;
+            this.purchaseVendorspuAdd(datas).then(res => {
+              this.OnBackLatePage(Form);
+            });
+          } else {
+            this.showSuccess("请填写必填项");
+            return false;
+          }
+        });
+      } else if (Form == 'vendorSpuImportAddForm') {
+        this.$refs[Form].validate((valid) => {
+          if (valid) {
+            let datas = {};
+            datas = this.vendorSpuImportAddForm;
+            datas.productName = this.vendorSpuImportAddForm.SpuProductName
+            delete datas.SpuProductName
+            this.purchaseVendorspuImport(datas).then(res => {
+              this.OnBackLatePage(Form);
+            });
+          } else {
+            this.showSuccess("请填写必填项");
+            return false;
+          }
+        });
+      }
+    },
+    //点击取消
+    OnBackLatePage(Form) {
+      this.$message({
+        type: "success",
+        message: `操作成功`
+      });
+      this.$refs[Form].resetFields();
+      this.quit(routesMapping.vendorSpuIndex, true);
+    },
+    change1(val){
+      this.cateIdFirstList.forEach((item, index) => {
+        if (val == item.cateId) {
+          this.vendorSpuImportAddForm.cateIdFirst = item.cateId
+          this.vendorSpuImportAddForm.cateNameFirst = item.cateName
+          this.datas.parentCateId = item.parentCateId 
+          this.datas.level=2
+          this.firstId = item.cateId
+        }
+      })
+      this.getCategoryList(this.datas)
+    },
+    change2(val){
+      this.cateIdSecondList.forEach((item, index) => {
+        if (val == item.cateId) {
+          this.vendorSpuImportAddForm.cateIdSecond = item.cateId
+          this.vendorSpuImportAddForm.cateNameSecond = item.cateName
+        }
+      })
+    },
+    getCategoryList(datas){
+      if(datas.level==1){
+        this.manageCategoryAll(datas).then(res=>{
+          this.cateIdFirstList = res.result;
+        })
+      }else if(datas.level==2){
+        this.manageCategoryAll(datas).then(res=>{
+          this.cateIdSecondList = res.result
+          this.cateIdSecondList.forEach((item, index) => {
+            if (this.firstId == item.parentCateId) {
+              this.vendorSpuImportAddForm.cateIdSecond = item.cateId
+              this.vendorSpuImportAddForm.cateNameSecond = item.cateName
+            }
+          })
+        })
+      }
+    },
+    getBrandList () {
+      this.manageBrandAll().then(res=>{
+        this.brandList = res.result
+      })
+    },
+    changeBrandFun (val) {
+      this.brandList.forEach((item, index) => {
+        if (val == item.cateId) {
+          this.vendorSpuImportAddForm.brandId = item.brandId
+          this.vendorSpuImportAddForm.brandCnName = item.brandCnName
+        }
+      })
+    },
+    blobToDataURL(blob, callback) {
+        var a = new FileReader();
+        a.onload = function (e) { callback(e.target.result); }
+        a.readAsDataURL(blob);
+    },
+    upload1 (file) {
+      let that = this
+      let blob = new Blob([file], {type: "application/octet-binary"})
+      this.imageUrl1 = URL.createObjectURL(blob);
+
+      this.blobToDataURL(blob, function (dataurl) {
+        that.imgInfo1.picPath = dataurl
+      });
+      return false;
+    },
+    upload2 (file) {
+      let that = this
+      let blob = new Blob([file], {type: "application/octet-binary"})
+      this.imageUrl2 = URL.createObjectURL(blob);
+
+      this.blobToDataURL(blob, function (dataurl) {
+        that.imgInfo2.picPath = dataurl
+      });
+      return false;
+    },
+    upload3 (file) {
+      let that = this
+      let blob = new Blob([file], {type: "application/octet-binary"})
+      this.imageUrl3 = URL.createObjectURL(blob);
+
+      this.blobToDataURL(blob, function (dataurl) {
+        that.imgInfo3.picPath = dataurl
+      });
+      return false;
+    },
+    upload4 (file) {
+      let that = this
+      let blob = new Blob([file], {type: "application/octet-binary"})
+      this.imageUrl4 = URL.createObjectURL(blob);
+
+      this.blobToDataURL(blob, function (dataurl) {
+        that.imgInfo4.picPath = dataurl
+      });
+      return false;
+    },
+    enlarge (type) {
+      switch(type)
+      {
+      case '1':
+        this.dialogImageUrl = this.imageUrl1
+        break;
+      case '2':
+        this.dialogImageUrl = this.imageUrl2
+        break;
+      case '3':
+        this.dialogImageUrl = this.imageUrl3
+        break;
+      case '4':
+        this.dialogImageUrl = this.imageUrl4
+        break;
+      }
+      this.dialogVisible = true;
+    },
+    handleRemoveImg (type) {
+      switch(type)
+      {
+      case '1':
+        this.imageUrl1 = '';
+        break;
+      case '2':
+        this.imageUrl2 = '';
+        break;
+      case '3':
+        this.imageUrl3 = '';
+        break;
+      case '4':
+        this.imageUrl4 = '';
+        break;
+      }
+    }
+  }
+};
+</script>
+<style lang='scss' scoped>
+.createPurchase-view {
+  height: 100%;
+  position: relative;
+  padding: 10px 30px 0px 30px;
+  .content {
+    .title {
+      color: #333;
+      font-weight: 700;
+      background-color: #ffffff;
+      border-bottom: 1px solid #e5e5e5;
+      .receiveTitle {
+        display: inline-block;
+      }
+      .downIcon {
+        cursor: pointer;
+        transition: 1s;
+      }
+    }
+    .content-wrapper {
+      padding: 20px 20px 1px 10px;
+      .displayStyle,
+      .displayStyle1 {
+        display: inline-block;
+        padding-left: 25px;
+        .row_width {
+          width: 300px;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          height: 36px;
+          color: #666666;
+        }
+        .sousuoIcon {
+          width: 14px;
+          height: 14px;
+          color: #bebebe;
+        }
+      }
+      .contarctInformation {
+        margin-left: 126px;
+        margin-bottom: 15px;
+        .contarctInformation_form {
+          background-color: #f8f9fb;
+          padding-bottom: 6px;
+          padding-top: 18px;
+          .contractInfo1,
+          .contractInfo2 {
+            display: inline-block;
+            .contract_row_width {
+              width: 240px;
+            }
+          }
+        }
+      }
+      .supplierNo {
+        margin-left: 195px;
+      }
+      .text-dash-show {
+        font-size: 14px;
+      }
+    }
+    .addProduct {
+      // margin-bottom: 16px;
+      margin-top: 15px;
+      margin-left: 20px;
+    }
+  }
+  .orderBox {
+    background-color: white;
+    padding: 0px 20px;
+    .orderContainer {
+      background-color: #fbfbfb;
+      padding: 0px 20px;
+      border: 1px solid #f1f1f1;
+      height: 50px;
+      line-height: 50px;
+      .orderCount {
+        float: right;
+        span {
+          color: red;
+          font-size: 18px;
+        }
+      }
+    }
+  }
+  .cancel-button {
+    color: #3b8cff;
+    border: 1px solid #bfd9fe;
+  }
+  .unvalid {
+    border-radius: 5px;
+  }
+  .el-table__body-wrapper {
+    overflow: inherit;
+  }
+}
+</style>
+<style lang='scss'>
+.createPurchase-view {
+  .procurements-config-wrapper {
+    overflow: inherit;
+  }
+  .el-date-editor.el-input,
+  .el-date-editor.el-input__inner {
+    width: 300px;
+    margin-left: 0px;
+    font-size: 14px;
+  }
+  .el-form-item__label {
+    color: #333;
+  }
+  .el-form-item {
+    margin-bottom: 13px;
+  }
+  .el-textarea__inner {
+    margin-top: 5px;
+    height: 80px;
+    margin-left: 2px;
+  }
+  .el-input__inner {
+    border: 1px solid #e0e0e0;
+    color: #666666;
+    &::-webkit-input-placeholder {
+      /* WebKit, Blink, Edge */
+      font-size: 14px !important;
+    }
+    &::-moz-placeholder {
+      /* Mozilla Firefox 19+ */
+      font-size: 14px !important;
+    }
+    &:-ms-input-placeholder {
+      /* Internet Explorer 10-11 */
+      font-size: 14px !important;
+    }
+  }
+  .el-date-editor input {
+    border: 1px solid #e0e0e0;
+    color: #666666;
+    &::-webkit-input-placeholder {
+      /* WebKit, Blink, Edge */
+      font-size: 14px !important;
+    }
+    &::-moz-placeholder {
+      /* Mozilla Firefox 19+ */
+      font-size: 14px !important;
+    }
+    &:-ms-input-placeholder {
+      /* Internet Explorer 10-11 */
+      font-size: 14px !important;
+    }
+  }
+  .el-select .el-input input {
+    border: 1px solid #e0e0e0;
+    color: #666666;
+    &::-webkit-input-placeholder {
+      /* WebKit, Blink, Edge */
+      font-size: 14px !important;
+    }
+    &::-moz-placeholder {
+      /* Mozilla Firefox 19+ */
+      font-size: 14px !important;
+    }
+    &:-ms-input-placeholder {
+      /* Internet Explorer 10-11 */
+      font-size: 14px !important;
+    }
+  }
+  .el-input.is-disabled .el-input__inner {
+    background-color: #f0f0f0;
+    font-size: 14px;
+  }
+  .unvalid .el-input__inner {
+    border-color: red !important;
+  }
+
+
+  .avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 85px;
+    height: 85px;
+    line-height: 85px;
+    text-align: center;
+  }
+  .avatar {
+    width: 85px;
+    height: 85px;
+    display: block;
+  }
+
+}
+</style>

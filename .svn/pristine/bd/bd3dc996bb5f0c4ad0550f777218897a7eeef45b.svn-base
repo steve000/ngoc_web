@@ -1,0 +1,559 @@
+<template>
+    <div class="page-content-wrapper">
+        <div class="page-header">
+            <header>
+                <div class="logo">
+                    <div class="logo-img"></div>
+                </div>
+                <el-menu router background-color="#292C31" text-color="#fff" key="menu2"
+                         :default-active="activeIndex" class="nav-menu" mode="horizontal">
+                    <template v-if="utype != 1">
+                      <!-- 一级 -->
+                      <div v-for="(item, index) in menuListData" :key="index" style="display:inline-block;line-height: 14px;">
+                          <el-menu-item v-if="item.menuType == 'button'" :index="item.menuUrl">{{item.menuName}}</el-menu-item>
+                          <el-submenu v-if="item.menuType == 'menu'" :index="item.menuUrl">
+                            <template slot="title">{{item.menuName}}</template>
+                            <!-- 二级 -->
+                            <div v-for="(item2, index2) in item.children" :key="index2" style="display:inline-block;line-height: 14px;">
+                                <el-menu-item v-if="item2.menuType == 'button'" :index="item2.menuUrl">{{item2.menuName}}</el-menu-item>
+                                <el-submenu v-if="item2.menuType == 'menu'" :index="item2.menuUrl" class="newMenu">
+                                  <template slot="title">{{item2.menuName}}</template>
+                                  <!-- 三级 -->
+                                  <div v-for="(item3, index3) in item2.children" :key="index3" style="display:inline-block;line-height: 14px;">
+                                      <el-menu-item v-if="item3.menuType == 'button'" :index="item3.menuUrl">{{item3.menuName}}</el-menu-item>
+                                      <el-submenu v-if="item3.menuType == 'menu'" :index="item3.menuUrl" class="newMenu">
+                                        <template slot="title">{{item3.menuName}}</template>
+                                      </el-submenu>  
+                                  </div>
+                                </el-submenu>  
+                            </div>
+                          </el-submenu>
+                      </div>
+                    </template>
+
+                    <template v-else>
+                        <el-menu-item index="/system/entity">系统设置</el-menu-item>
+                    </template>
+
+                    <div style="position: absolute; right: 0px;outline: none;top:0;">
+                        <div class="avatar fs14">
+                            <span style="opacity: 0.8">部门:</span>
+                            <!--
+                            <template v-if="userEntityList.length > 1" >
+                                <el-select v-model="curEntityId" placeholder="请选择业务实体" size="small" class="entity-select"
+                                           @change="changeEntity">
+                                    <el-option v-for="item in userEntityList" :key="item.userGroupId"
+                                               :value="item.userGroupId + ''" :label="item.groupName"></el-option>
+                                </el-select>
+                            </template>
+                            <template v-else>
+                                <span class="single-entity">{{userEntityList[0].groupName}}</span>
+                            </template>
+                            -->
+                            <span class="single-entity row-show" :title="groupName">{{groupName}}</span>
+                            <span class="separation"> | </span>
+                        </div>
+
+                        <el-submenu index="/user-operate" class="reset-submenu">
+                            <template slot="title">
+                                <i class="iconfont1 iconren icon-ren"></i>
+                                <div class="row-show" style="display: inline-block;max-width: 100px;">{{currentUser}}</div>
+                            </template>
+                            <el-menu-item index="/notification/Index">操作记录</el-menu-item>
+                            <el-menu-item index="/login"><span @click="onLogout">退出</span></el-menu-item>
+                        </el-submenu>
+                    </div>
+
+                </el-menu>
+
+                <!--
+                <div class="message">
+                    <div class="message-num-box" @click="$router.push('/notification/Index')">
+                        <el-badge :value="notReadCount&&notReadCount.count" class="item">
+                            <i class='iconfont1 icon-xiaoxi'></i>
+                        </el-badge>
+                        消息
+                    </div>
+                </div>
+                -->
+
+            </header>
+            <router-tab refs='routerTab'></router-tab>
+        </div>
+
+        <div class="page-content">
+            <keep-alive :include='cachedRoutes'>
+                <router-view></router-view>
+            </keep-alive>
+        </div>
+    </div>
+</template>
+
+<script>
+import { mapActions, mapState } from "vuex";
+import { HOST_BASE } from "../constants/api";
+import RouterTab from "../components/RouterTab";
+import cookies from "../utils/cookies";
+export default {
+  name: "MainIndex",
+  components: {
+    RouterTab
+  },
+  data() {
+    return {
+      //    curEntityId: '',
+      groupId: "",
+      groupName: "",
+      utype: "",
+      menuListData: [],
+    };
+  },
+
+  //        watch: {
+  //            userEntityList: function (nval, oval) {
+  //                if (nval.length == 1) {
+  //                    this.curEntityId = nval[0].userGroupId
+  //                }
+  //                this.curEntityId = nval[0].userGroupId
+  //            }
+  //        },
+  computed: {
+    ...mapState({
+      currentUser: ({ root }) => root.currentUser,
+      tabCaches: ({ root }) => root.tabCaches,
+      //     userEntityList: ({root}) => root.userEntityList,
+      notReadCount: ({ notification }) => notification.notReadCount
+    }),
+
+    activeIndex() {
+      const path = this.$route.path;
+      console.log(path,"089896785")
+      const routesMapping = {
+        
+        '/sales/order': '/sales/order',  //销售模块
+        '/sales/import/salesOrders': '/sales/order',
+        '/sales/check/salesOrder': '/sales/order',
+        "/sales/return": "/sales/return",
+        "/sales/change": "/sales/change",
+        "/sales/proxy": "/sales/proxy",
+        "/stock/storage": "/stock/storage", // 入库模块
+        "/stock/outbound": "/stock/outbound", // 出库模块
+        "/stock/CreateOutbound": "/stock/outbound",
+        '/stock/ViewOutbound': '/stock/outbound',
+        "/stock/OutboundPageDetail": "/stock/outbound",
+        "/stock/SetOutboundPage": "/stock/outbound",
+        "/stock/transfer": "/stock/transfer", // 调拨模块
+        "/stock/management": "/stock/management", // 库存管理模块
+        "/stock/inventory": "/stock/inventory", // 盘点
+        "/stock/costManagement": "/stock/costManagement", // 物流费用录入
+        "/contract": "/contract", //合同
+        "/config/storehouse": "/config/storehouse", //仓库模块
+        "/config/supplier": "/config/supplier", //供货商管理模块
+        "/config/client": "/config/client", //客户设置
+        "/config/commodity": "/config/commodity", // 商品设置
+        "/bonus/settlement": "/bonus/settlement",//酬金结算单
+        "/bonus/recommend": "/bonus/recommend",//推荐管理
+        "/system/entity": "/system/entity", //系统设置
+
+      };
+      for (let key in routesMapping) {
+        if (path.indexOf(key) === 0) {
+          return routesMapping[key];
+        }
+      }
+      return path;
+    },
+    cachedRoutes() {
+      return this.tabCaches.map(item => item.name);
+    }
+  },
+  mounted() {
+    const userName = sessionStorage.getItem("userName");
+    userName && this.changeCurrentUser(userName);
+    //    this.getEntity()
+    this.groupId = sessionStorage.getItem("entityId");
+    this.groupName = sessionStorage.getItem("entityName");
+    this.utype = sessionStorage.getItem("utype");
+    //    this.getNotReadMessage();
+    this.menuListData = JSON.parse(localStorage.getItem('menuList'));
+    console.log(this.menuListData,"权限");
+  },
+  methods: {
+    handleCommand(item) {
+      if (item == "a") {
+        this.$router.push("/notification/Index");
+      } else {
+        this.onLogout();
+      }
+    },
+    onLogout() {
+      this.clearData()
+      setTimeout(() => {
+        cookies.delCookie("ng");
+        this.$router.push('/login')
+        window.location.href = `${HOST_BASE}/#/login`
+        window.location.reload();
+      }, 100);
+      this.logout()
+    },
+    clearData () {
+        cookies.delCookie('ng')
+        sessionStorage.setItem('tabCaches', '[]')
+        sessionStorage.setItem('tabCachesReload', '[]')
+        this.$store.dispatch('clearTabCache')
+        sessionStorage.setItem('entityId', '')
+        sessionStorage.setItem('entityName', '')
+        sessionStorage.setItem('userId', '')
+        sessionStorage.setItem('userName', '')
+        sessionStorage.setItem('utype', '')
+        sessionStorage.setItem('ng', '')
+        localStorage.setItem('menuList', '[]')
+    },
+    getEntity() {
+      const userId = sessionStorage.getItem("userId");
+      if (userId) {
+        this.changeCurrentUserId(userId).then(resp => {
+          this.getUserEntityListDo({ uid: userId }).then(res => {
+            if (res && res.result && res.result.length > 0) {
+              this.setCurEntity();
+            } else {
+              this.$message({
+                type: "info",
+                message: "业务实体返回错误!"
+              });
+            }
+          });
+        });
+      } else {
+        this.onLogout();
+      }
+    },
+    setCurEntity() {
+      const entityId = sessionStorage.getItem("entityId");
+      if (entityId) {
+        let res = this.userEntityList.find(one => {
+          return one.userGroupId == entityId;
+        });
+        if (res) {
+          this.curEntityId = entityId;
+        } else {
+          this.curEntityId = this.userEntityList[0].userGroupId;
+          this.setEntityStorage();
+        }
+      } else {
+        this.curEntityId = this.userEntityList[0].userGroupId;
+        this.setEntityStorage();
+      }
+    },
+    setEntityStorage() {
+      sessionStorage.setItem("entityId", this.userEntityList[0].userGroupId);
+      sessionStorage.setItem("entityName", this.userEntityList[0].groupName);
+    },
+    changeEntity(data) {
+      sessionStorage.setItem("entityId", this.curEntityId);
+      this.changeCurrentEntityId({ entityId: this.curEntityId });
+      this.userEntityList.forEach(one => {
+        if (one.userGroupId == data) {
+          sessionStorage.setItem("entityName", one.groupName);
+          this.changeCurrentEntity({ entityName: one.groupName });
+        }
+      });
+    },
+    // 查询未读消息
+    getNotReadMessage() {
+      this.queryMessageNotRead().then(res => {});
+    },
+    ...mapActions([
+      "changeCurrentUser",
+      "changeCurrentUserId",
+      "getUserEntityListDo",
+      "changeCurrentEntity",
+      "changeCurrentEntityId",
+      "queryMessageNotRead",
+      "logout"
+    ])
+  }
+};
+</script>
+
+<style lang='scss'>
+@import "../layouts/css/index.scss";
+
+.page-header {
+  position: absolute;
+  top: 0;
+  z-index: 99;
+  min-width: 100%;
+  header {
+    height: 60px;
+    background-color: #2f2f2f;
+    display: block;
+    position: relative;
+    font-size: 16px;
+    .logo {
+      height: 100%;
+      line-height: inherit;
+      width: 160px;
+      overflow: hidden;
+      display: inline-block;
+      text-align: center;
+      .logo-img {
+        position: relative;
+        top: 17px;
+        display: inline-block;
+        margin: auto auto;
+        width: 138px;
+        height: 25px;
+        overflow: hidden;
+        background: transparent url("../layouts/images/logo_title.png") center
+          center no-repeat;
+        background-size: contain;
+      }
+    }
+    .nav-menu {
+      display: inline-block;
+      border-bottom: none;
+      margin-left: -5px;
+      height: 60px;
+      .el-submenu__title {
+        i {
+          color: inherit;
+        }
+      }
+    }
+    /*消息*/
+    .message {
+      position: absolute;
+      top: 0;
+      right: 265px;
+      padding-left: 35px;
+      color: #fff;
+      line-height: $header-height;
+      cursor: pointer;
+    }
+    .message-num-box {
+      height: 34px;
+      margin-top: 14px;
+      line-height: 34px;
+      font-size: 14px;
+      .item {
+        margin-right: 8px;
+      }
+    }
+    .icon-xiaoxi {
+      font-size: 20px;
+    }
+    .avatar {
+      display: inline-block;
+      padding-left: 35px;
+      .entity-select {
+        width: 126px;
+        margin-right: 3px;
+        text-overflow: ellipsis;
+        * {
+          background-color: #2f2f2f;
+          border-color: #2f2f2f;
+          line-height: inherit;
+          color: #fff;
+        }
+        .el-input.is-focus .el-input__inner {
+          border-color: #2f2f2f;
+        }
+        .el-input__inner {
+          padding: 0 5px;
+          color: #fff;
+        }
+      }
+      .single-entity {
+        max-width: 100px;
+        text-align: left;
+        /*text-overflow: ellipsis;*/
+        /*word-break: keep-all;*/
+        /*overflow: hidden;*/
+        /*white-space: nowrap;*/
+        margin-right: 10px;
+        margin-left: 3px;
+        display: inline-block;
+        color: #fff;
+        vertical-align: middle;
+        font-size: 14px;
+      }
+      .separation {
+        display: inline-block;
+        margin-right: 15px;
+      }
+      .iconren {
+        margin-top: 1px;
+        margin-right: 1px;
+        font-size: 14px;
+        color: #fff;
+      }
+      span {
+        text-align: center;
+        color: #fff;
+        line-height: 60px;
+      }
+    }
+
+    .reset-submenu.el-submenu {
+      float: right;
+      margin: 0 20px 0 0;
+      &.is-active .el-submenu__title {
+        border-bottom: none !important;
+        color: #fff !important;
+      }
+    }
+
+    .el-menu {
+      position: static;
+    }
+    .el-menu-item,
+    .el-submenu__title {
+      padding: 0;
+      font-size: 14px;
+    }
+    .el-menu li {
+      padding: 0px;
+      margin: 0 19px;
+    }
+    .el-menu--horizontal > .el-menu-item.is-active,
+    .el-menu--horizontal > .el-submenu.is-active .el-submenu__title {
+      border-bottom: 2px solid #3b8cff;
+      color: #3b8cff;
+      height: 46px;
+      padding: 0;
+      font-size: 14px;
+      background-color: inherit;
+    }
+    .el-menu-item {
+      color: #666;
+    }
+    .el-menu-item:hover {
+      color: #333;
+      background-color: #2f2f2f !important;
+    }
+    .el-submenu > .el-submenu__title {
+      background-color: #2f2f2f !important;
+    }
+    .el-menu--horizontal .el-submenu > .el-menu {
+      width: 140px;
+      background-color: #fff !important;
+      li {
+        background-color: #fff !important;
+        color: #666 !important;
+        text-align: left;
+        font-size: 12px;
+        padding-left: 12px;
+        margin: 0px;
+        width: 140px;
+        min-width: 140px;
+        &:hover {
+          color: #333 !important;
+          background-color: #f6fafe !important;
+        }
+        &.is-active {
+          color: #333 !important;
+          background-color: #f6fafe !important;
+        }
+      }
+    }
+  }
+}
+
+.page-content {
+  width: 100%;
+  position: absolute;
+  background: #e9eef1;
+  top: 97px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: auto;
+}
+
+.dropdown-style-reset {
+  width: 100px;
+  padding: 0;
+  li.el-dropdown-menu__item {
+    padding: 0 0 0 12px;
+    color: #666666;
+    font-size: 12px;
+    &:hover {
+      color: #333333;
+      background-color: #fff;
+    }
+  }
+}
+
+// 下拉框样式
+// .el-menu--horizontal {
+//   .el-menu.el-menu--popup {
+//     background-color: #fff !important;
+//     min-width: 120px;
+//     .el-menu-item {
+//       background-color: #fff !important;
+//       width: 120px;
+//       color: #666 !important;
+//       font-size: 12px;
+//       &.is-active {
+//         color: #333 !important;
+//         background-color: #f6fafe !important;
+//       }
+//       &:hover {
+//         color: #333 !important;
+//         background-color: #f6fafe !important;
+//       }
+//     }
+//   }
+// }
+
+// 三级菜单覆盖之前非通用样式
+.page-header header .el-menu--horizontal .el-submenu .el-menu-item {
+  float: left;
+}
+.page-header header .el-menu--horizontal .el-submenu .el-submenu__title,
+.page-header header .el-menu--horizontal .el-submenu .el-submenu__title:hover,
+.page-header header .el-menu--horizontal .el-submenu .el-submenu__title:active {
+  color: #fff !important;
+}
+.page-header header .el-menu--horizontal .el-submenu .el-submenu__title.is-active {
+  color: #3b8cff !important;
+}
+.page-header header .el-menu--horizontal .el-submenu > .el-menu {
+  padding: 0px;
+}
+.page-header header .el-menu--horizontal .el-submenu > .el-menu .newMenu {
+    height: 36px;
+    line-height: 14px;
+    background-color: #fff !important;
+    color: #666 !important;
+    text-align: left;
+    font-size: 12px;
+    padding-left: 12px;
+    padding-right: 10px;
+    margin: 0px;
+    width: 140px;
+    min-width: 140px;
+  .el-submenu__title {
+    height: 36px;
+    line-height: 36px;
+    background-color: #fff !important;
+    color: #666 !important;
+    font-size: 12px;
+    margin: 0px;
+  }
+  .el-submenu__title.is-active {
+    color: #3b8cff !important;
+  }
+  .el-menu {
+    left: 140px;
+    top: 0px;
+    .el-menu-item {
+        color: #666 !important;
+    }
+    .el-menu-item.is-active {
+        color: #3b8cff !important;
+    }
+  }
+}
+</style>

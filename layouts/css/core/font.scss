@@ -1,0 +1,75 @@
+
+@font-face {font-family: "iconfont";
+    src: url('~/layouts/fonts/iconfont.eot?t=1494226966513'); /* IE9*/
+    src: url('~/layouts/fonts/iconfont.eot?t=1494226966513#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('~/layouts/fonts/iconfont.woff?t=1494226966513') format('woff'), /* chrome, firefox */
+    url('~/layouts/fonts/iconfont.ttf?t=1494226966513') format('truetype'), /* chrome, firefox, opera, Safari, Android, iOS 4.2+*/
+    url('~/layouts/fonts/iconfont.svg?t=1494226966513#iconfont') format('svg'); /* iOS 4.1- */
+}
+
+
+[class^="icon-"], [class*=" icon-"] {
+    /* use !important to prevent issues with browser extensions that change fonts */
+    font-family: 'iconfont' !important;
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+
+    /* Better Font Rendering =========== */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-checked:before { content: "\e607"; }
+
+.icon-close:before { content: "\e608"; }
+
+.icon-circle-plus:before { content: "\e609"; }
+
+.icon-plus:before { content: "\e60b"; }
+
+.icon-delete:before { content: "\e60c"; }
+
+.icon-dropdown:before { content: "\e60d"; }
+
+.icon-refuse:before { content: "\e60e"; }
+
+.icon-circle-close:before { content: "\e60f"; }
+
+.icon-dropdown_small:before { content: "\e611"; }
+
+.icon-unchecked:before { content: "\e612"; }
+
+.icon-eye:before { content: "\e614"; }
+
+.icon-unlocked:before { content: "\e615"; }
+
+.icon-locked:before { content: "\e616"; }
+
+.icon-selected:before { content: "\e610"; }
+
+.icon-edit:before { content: "\e613"; }
+
+.icon-square-add:before { content: "\e617"; }
+
+.icon-square-settings:before { content: "\e618"; }
+
+.icon-circle-minus:before { content: "\e619"; }
+
+.icon-circle-checked:before { content: "\e61a"; }
+
+.icon-circle-more:before { content: "\e61b"; }
+
+.icon-download:before { content: "\e61c"; }
+
+.icon-logout:before { content: "\e61d"; }
+
+.icon-passwd-hidden:before {
+    content: "\e61e";
+}
+
+
+

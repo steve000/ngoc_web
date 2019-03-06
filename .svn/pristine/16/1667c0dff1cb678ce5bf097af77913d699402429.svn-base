@@ -1,0 +1,18 @@
+<template>
+  <div class="content-section">
+    <add-edit :type="`add`"></add-edit>
+  </div>
+</template>
+
+<script>
+import PlatformMixins from "~/mixins/platform";
+import addEdit from './addEdit'
+
+export default {
+  name: "addGeneralPrice",
+  mixins: [PlatformMixins],
+  components: {
+    addEdit
+  },
+};
+</script>

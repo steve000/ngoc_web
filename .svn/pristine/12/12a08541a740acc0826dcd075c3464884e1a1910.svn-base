@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+    <link rel="icon" type="image/png" href="./logo.png" />
+  <title></title>
+<link rel="shortcut icon" href="/static/logo.png"></head>
+<body>
+<script>
+    const docEle = document.documentElement;
+    var windowWidth = window.innerWidth
+    var width = 1200;
+    if(parseInt(windowWidth) < width){
+        docEle.style.minWidth = width + 'px'
+    }else{
+        docEle.style.minWidth = windowWidth + 'px'
+    }
+    window.addEventListener("resize", function () {
+        const docEle = document.documentElement;
+        var windowWidth = window.innerWidth
+        var width = 1200;
+        if(parseInt(windowWidth) < width){
+            docEle.style.minWidth = width + 'px'
+        }else{
+            docEle.style.minWidth = windowWidth + 'px'
+        }
+    })
+    window.config = {
+        // 正式环境API
+        context: "http://10.148.160.133:8092",
+        version: "2018-06-01 10:01:08"
+    }
+
+    if (!sessionStorage.getItem('userName')) {
+        delCookie('ng')
+    }
+    function delCookie(name){//为了删除指定名称的cookie，可以将其过期时间设定为一个过去的时间
+        var date = new Date();
+        date.setTime(date.getTime() - 10000);
+        document.cookie = name + "=a; expires=" + date.toGMTString();
+    }
+</script>
+
+
+<div id="root"></div>
+<script>!function(e){function n(r){if(t[r])return t[r].exports;var c=t[r]={i:r,l:!1,exports:{}};return e[r].call(c.exports,c,c.exports,n),c.l=!0,c.exports}var r=window.webpackJsonp;window.webpackJsonp=function(t,o,a){for(var f,d,i,u=0,s=[];u<t.length;u++)d=t[u],c[d]&&s.push(c[d][0]),c[d]=0;for(f in o)Object.prototype.hasOwnProperty.call(o,f)&&(e[f]=o[f]);for(r&&r(t,o,a);s.length;)s.shift()();if(a)for(u=0;u<a.length;u++)i=n(n.s=a[u]);return i};var t={},c={67:0};n.e=function(e){function r(){f.onerror=f.onload=null,clearTimeout(d);var n=c[e];0!==n&&(n&&n[1](new Error("Loading chunk "+e+" failed.")),c[e]=void 0)}var t=c[e];if(0===t)return new Promise(function(e){e()});if(t)return t[2];var o=new Promise(function(n,r){t=c[e]=[n,r]});t[2]=o;var a=document.getElementsByTagName("head")[0],f=document.createElement("script");f.type="text/javascript",f.charset="utf-8",f.async=!0,f.timeout=12e4,n.nc&&f.setAttribute("nonce",n.nc),f.src=n.p+"js/"+e+"."+({65:"apps",66:"vendors"}[e]||e)+"_"+{0:"49a86",1:"3eee6",2:"f35d5",3:"f22b2",4:"8338a",5:"1dbeb",6:"d44a0",7:"bfc2f",8:"5eb69",9:"77615",10:"571e7",11:"4a911",12:"ea317",13:"249a4",14:"17769",15:"bb5e0",16:"ce6a0",17:"6ce24",18:"cfe85",19:"72cfd",20:"01370",21:"c391f",22:"9f3b1",23:"8cf8a",24:"9e537",25:"054cb",26:"28efd",27:"5fc44",28:"cedbe",29:"420a6",30:"8eeae",31:"32281",32:"9cab4",33:"930ae",34:"2bb99",35:"d56c7",36:"25c33",37:"def51",38:"df972",39:"803d1",40:"94993",41:"4df38",42:"1c599",43:"98280",44:"b7f05",45:"92b6c",46:"19c57",47:"8d462",48:"7e488",49:"d7df2",50:"230ba",51:"88d5f",52:"2a3d1",53:"d81b9",54:"d606e",55:"c808c",56:"6c7c2",57:"40955",58:"c74ef",59:"e1ffe",60:"d1925",61:"a453a",62:"fd588",63:"b61c9",64:"7a126",65:"91654",66:"099e1"}[e]+".js";var d=setTimeout(r,12e4);return f.onerror=f.onload=r,a.appendChild(f),o},n.m=e,n.c=t,n.d=function(e,r,t){n.o(e,r)||Object.defineProperty(e,r,{configurable:!1,enumerable:!0,get:t})},n.n=function(e){var r=e&&e.__esModule?function(){return e.default}:function(){return e};return n.d(r,"a",r),r},n.o=function(e,n){return Object.prototype.hasOwnProperty.call(e,n)},n.p="/static/",n.oe=function(e){throw e}}([]);</script>
+<script type="text/javascript" src="/static/js/vendors_099e1.js"></script><script type="text/javascript" src="/static/js/apps_91654.js"></script></body>
+</html>

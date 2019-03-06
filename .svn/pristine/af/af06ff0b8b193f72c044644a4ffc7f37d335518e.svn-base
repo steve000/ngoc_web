@@ -1,0 +1,370 @@
+<template>
+    <div class="goods-list">
+        <div class="search">
+            <search @searchValue="getSearchValue" :showResetButton="showResetButton" @reset="getReset" :isShowSearchResult="isShowSearchResult" :count="totalCount" :showPlaceholder="'输入商品名称或者SKU编码查询'"></search>
+        </div>
+        <div class="search_result_container" v-if="searchItemValueArray.length>0">
+            <search-result :searchItemValueArray="searchItemValueArray" :count="totalCount" @deleteItem="getDeleteItem"></search-result>
+        </div>
+        <div class="table-wrapper">
+            <el-table :data="goodsMultiBarList" border class="setFixedHeight">
+
+                <el-table-column label="商品名称" min-width="300">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.skuName">{{scope.row.skuName ? scope.row.skuName : '--'}}</div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column width="30">
+                    <template slot-scope="scope">
+                        <div class="row-btn-show">
+                            <div>
+                                <more-operating @onEdit="$router.push({ name:'GoodsMultiBarAdd', params: {skuId: scope.row.skuId}})" @onDelete="deleteMultiBar(scope.row, 0)">
+                                </more-operating>
+                                <span style="padding: 0 7px;float:right;height:1px;"></span>
+                            </div>
+                        </div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="SKU编码" min-width="150">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.skuId">{{scope.row.skuId ? scope.row.skuId :'--'}}</div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="条码" min-width="150">
+                    <template slot-scope="scope">
+                        <div class="row-btn-show ">
+                            <div class="row-show" :title="scope.row.skuBarCode">{{scope.row.skuBarCode ? scope.row.skuBarCode : '--'}}
+                            </div>
+                        </div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="备注" min-width="300">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.remark">{{scope.row.remark ? scope.row.remark : '--'}}</div>
+                    </template>
+                </el-table-column>
+
+                <div slot="empty" class="table_slot_empty_text">
+                    <div><img src="../../../layouts/images/nodata.png" /></div>
+                    <div>暂无数据</div>
+                </div>
+            </el-table>
+            <div class="pagination-section">
+                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="params.pageNo" background :page-size="params.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="totalCount">
+                </el-pagination>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+import TableHeight from "~/mixins/tableheight";
+import Search from "~/components/common/Search";
+import SearchResult from "~/components/common/SearchResult.vue";
+import MoreOperating from "~/components/common/MoreOperatingDelete";
+import Modal from "~/components/Modal";
+import { mapActions, mapState } from "vuex";
+
+export default {
+  props: { operationId: Number, flag: String },
+  name: "MutiBarList",
+  mixins: [TableHeight],
+  components: {
+    Search,
+    SearchResult,
+    MoreOperating,
+    Modal
+  },
+  data() {
+    return {
+      //list数据
+      goodsMultiBarList: [],
+      oneGoodsList: [],
+      totalCount: 0,
+      skuArray: [],
+      showResetButton: false,
+      isShowSearchResult: false,
+      isClick: false,
+      addMultiBar: false,
+      params: {
+        pageSize: 10,
+        pageNo: 1,
+        searchKey: ""
+      },
+      searchItemValueArray: [],
+      isClear: false,
+    };
+  },
+  watch: {
+    // flag: function(nval) {
+    //   console.log(nval, "111");
+    //   this.params.pageSize = 10;
+    //   this.params.pageNo = 1;
+    //   this.getReset();
+    // },
+    operationId: function(nval) {
+      console.log(nval, "operationId");
+      this.refreshPage();
+    }
+  },
+  mounted() {
+    this.refreshPage();
+    // this.setTableHeight(280);
+  },
+  computed: {
+    ...mapState({})
+  },
+  methods: {
+    ...mapActions([
+      "goodsMultiBarAdd",
+      "goodsMultiBarDelete",
+      "queryGoodsMultiBarList",
+      "showPageLoading",
+      "hidePageLoading"
+    ]),
+    getReset() {
+      this.showResetButton = false;
+      this.isShowSearchResult = false;
+      this.isClick = false;
+      this.params.searchKey = "";
+      this.refreshPage();
+    },
+    getDeleteItem(index) {
+      this.searchItemValueArray.splice(index);
+      this.isClear = true;
+      this.params.searchKey = "";
+      this.refreshPage();
+    },
+    refreshPage() {
+      this.showPageLoading();
+      this.queryGoodsMultiBarList(this.params).then(resp => {
+        this.hidePageLoading();
+        resp.result.forEach(one => {
+          one.has_show_more = false;
+          // 给记录添加是否已展开标记，true的话表示已经展开，false表示没有展开
+        });
+        if (this.isClick) {
+          this.showResetButton = true;
+          this.isShowSearchResult = true;
+        }
+        this.goodsMultiBarList = resp.result;
+        this.totalCount = resp.totalCount;
+      });
+    },
+    //模糊查询
+    getSearchValue(searchValue) {
+      this.params.searchKey = searchValue;
+      this.isClick = true;
+      this.isClear = false;
+      this.searchItemValueArray = [searchValue];
+      this.refreshPage(this.params);
+    },
+    searchEnterFun(e) {
+      var keyCode = window.event ? e.keyCode : e.which;
+      //  console.log('回车搜索',keyCode,e);
+      if (keyCode == 13 && this.params.searchKey) {
+        this.refreshPage(this.params);
+      } else {
+        // this.refreshPage(this.params)
+      }
+    },
+    // 查看详情
+    viewGoods(id) {
+      this.$router.push(`/goods/view/${id}`);
+      sessionStorage.setItem("goodsSkuId", id);
+      sessionStorage.setItem("cateId", this.flag);
+    },
+    // 查看更多弃用
+    showMore(index, row) {
+      var id = row.productId;
+      if (!row["has_show_more"]) {
+        if (this.isLoading) {
+          return false;
+        }
+        var reqData = {
+          productId: id
+        };
+        this.showPageLoading();
+        this.queryGoodsListSku(reqData)
+          .then(resp => {
+            resp.forEach(one => {
+              one.isSubContent = true;
+              one.productId = " ";
+              one.productName = one.skuName;
+              // one.sub_show = true          //给返回的子列表添加字段作为标记，true的时候表示是展开的内容，没有该字段表示不是展开的内容
+            });
+            resp.forEach(item => {
+              item.skuAttrsNew = "";
+              if (item.skuAttrs && item.skuAttrs.length > 0) {
+                item.skuAttrs.forEach(one => {
+                  item.skuAttrsNew += one.attrValue + ",";
+                });
+                item.skuAttrsNew = item.skuAttrsNew.substring(
+                  0,
+                  item.skuAttrsNew.length - 1
+                );
+              }
+            });
+            this.oneGoodsList = resp;
+            this.goodsList[index].sub_show_length = resp.length; //给展开的记录添加展开的内容长度标记
+            this.goodsList.splice(index + 1, 0, ...this.oneGoodsList);
+            this.goodsList[index].has_show_more = true; //设置标记已展开
+            this.hidePageLoading();
+          })
+          .catch(() => {
+            this.hidePageLoading();
+          });
+      } else {
+        let length = this.goodsList[index].sub_show_length; //获取要删除的长度
+        this.goodsList.splice(index + 1, length); //删除展开的内容
+        this.goodsList[index].has_show_more = false; //设置标记未展开
+        this.goodsList[index].sub_show_length = 0;
+      }
+    },
+    // 修改pagesize
+    handleSizeChange(nSize) {
+      this.params.pageSize = nSize;
+      this.refreshPage(this.params);
+    },
+    // 修改页码
+    handleCurrentChange(nPage) {
+      console.log("修改page");
+      this.params.pageNo = nPage;
+      this.refreshPage(this.params);
+    },
+    // 删除多条码
+    deleteMultiBar(item, statu) {
+      let confirmType = `warning`;
+      let confirmText;
+      if (statu === 0) {
+        confirmText = `删除`;
+      }
+      this.$confirm(
+        `确认${confirmText}选中的条形码？`,
+        `${confirmText}条形码`,
+        {
+          confirmButtonText: "确定",
+          type: confirmType
+        }
+      )
+        .then(() => {
+          this.goodsMultiBarDelete({ id: item.id }).then(res => {
+            console.log(res);
+            this.$message({
+              type: "success",
+              message: `${confirmText}条形码成功`
+            });
+            this.refreshPage(this.params);
+          });
+        })
+        .catch(() => {});
+    }
+  }
+};
+</script>
+<style lang="scss">
+.goods-list {
+  height: 100%;
+  .search-component {
+    right: 0px;
+  }
+  .search {
+    margin-top: 20px;
+  }
+  .table-wrapper {
+    overflow-y: hidden;
+    .row-btn-show div {
+      color: black;
+      cursor: default;
+    }
+  }
+  .handleButtonContainer {
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    border-radius: 50%;
+    background-color: #eceff1;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    margin-right: 10px;
+  }
+  .el-table th:first-child {
+    border-right: none;
+  }
+  .el-table th:nth-child(2) {
+    border-left: none;
+  }
+}
+
+.el-tooltip__popper.is-light {
+  background: #fff;
+  border: 1px solid #eee;
+}
+
+.el-tooltip__popper.is-light[x-placement^="bottom"] .popper__arrow {
+  border-bottom-color: #eee;
+}
+
+.el-input-group__prepend {
+  background-color: #fff;
+}
+
+.el-input-group--prepend .el-input__inner,
+.el-input-group__append {
+  border-left: 0px;
+  padding-left: 0;
+}
+
+.el-button + .el-button {
+  margin-left: 10px;
+}
+
+.iconColor {
+  color: black;
+}
+
+.showMoreColor {
+  cursor: pointer;
+  &:hover {
+    color: #3b8cff;
+  }
+}
+
+/*.el-pagination {*/
+
+/*.btn-prev, .btn-next{*/
+
+/*i{*/
+
+/*visibility: hidden;*/
+
+/*}*/
+
+/*}*/
+
+/*.btn-prev{*/
+
+/*&:before{*/
+
+/*content:"上一页"*/
+
+/*}*/
+
+/*}*/
+
+/*.btn-next{*/
+
+/*&:before{*/
+
+/*content:"下一页"*/
+
+/*}*/
+
+/*}*/
+
+/*}*/
+</style>

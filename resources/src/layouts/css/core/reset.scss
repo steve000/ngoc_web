@@ -1,0 +1,74 @@
+/** element-ui的对话框会给body增加样式，导致导航栏右侧出现空白 **/
+
+body {
+    padding-right: 0 !important;
+    background-color: #f5f5f5;
+    color: #333;
+    .el-form-item {
+        margin-bottom: 11px;
+    }
+    .el-select-dropdown__item.selected {
+        color: #333;
+    }
+    //select框聚焦时边框
+    .el-select .el-input.is-focus .el-input__inner {
+        border: 1px solid #E7E7E7;
+        border-radius: 1px;
+    }
+    //select框里字体
+    .el-select .el-input input {
+        font-size: 12px;
+    }
+    //select下拉弹框在下面时
+    .el-popper[x-placement^=bottom] {
+        margin-top: 0;
+    }
+    //select下拉弹框在上面时
+    .el-popper[x-placement^=top] {
+        margin-bottom: 0;
+    }
+    //form表单错误提示距离
+    .el-form-item__error {
+        padding-top: 0;
+    }
+    .el-popper[x-placement^=top] .popper__arrow {
+        display: none;
+    }
+    .el-popper[x-placement^=bottom] .popper__arrow {
+        display: none;
+    }
+    // tooltip样式
+    .el-tooltip__popper.is-light {
+        background: #FFFFFF;
+        border: transparent;
+        box-shadow: 0 2px 5px 0 #C1C1C1;
+        border-radius: 2px;
+    }
+    .el-tooltip__popper.is-light[x-placement^=right] .popper__arrow {
+        background: #FFFFFF;
+        border: transparent;
+        box-shadow: 0 2px 5px 0 #C1C1C1;
+    }
+    .el-tooltip__popper.is-light[x-placement^=top] .popper__arrow {
+        border-top-color: #fff;
+    }
+    /*
+      重置input和文本框 圆角1px样式
+      */
+    .el-input {
+        .el-input__inner {
+            border-radius: 1px;
+        }
+        .el-input__suffix {
+            .el-input__icon {
+                line-height: 1;
+            }
+        }
+    }
+    .el-textarea__inner {
+        border-radius: 1px;
+    }
+    .el-tooltip__popper.is-light {
+        color: #888;
+    }
+}

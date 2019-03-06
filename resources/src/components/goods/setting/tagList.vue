@@ -1,0 +1,254 @@
+<template>
+    <div class="goods-list">
+        <div class="search">
+            <search @searchValue="onSearchGood" :showResetButton="showResetButton" @reset="getReset" :isShowSearchResult="isShowSearchResult" :count="totalCount" :showPlaceholder="'请输入标签名称'"></search>
+        </div>
+        <div class="search_result_container" v-if="searchItemValueArray.length>0">
+            <search-result :searchItemValueArray="searchItemValueArray" :count="totalCount" @deleteItem="getDeleteItem"></search-result>
+        </div>
+        <div class="table-wrapper">
+            <el-table :data="tagList" border :height="tableHeight">
+                <el-table-column label="标签名称" min-width="200" max-width="400">
+                    <template slot-scope="scope">
+                        <div class="row-show" :title="scope.row.tagName">{{scope.row.tagName ? scope.row.tagName : '--'}}</div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column min-width="50">
+                    <template slot-scope="scope">
+                        <div class="row-btn-show">
+                            <div>
+                                <more-operating @onEdit="$router.push({ path: `/goods/setting/tagEdit`, query: {tagId: scope.row.tagId, tagCnName: scope.row.tagCnName}})" @onDelete="deletetag(scope.row, 0)">
+                                </more-operating>
+                                <span style="padding: 0 7px;float:right;height:1px;"></span>
+                            </div>
+                        </div>
+                    </template>
+                </el-table-column>
+
+                <div slot="empty" class="table_slot_empty_text">
+                    <div><img src="../../../layouts/images/nodata.png" /></div>
+                    <div>暂无数据</div>
+                </div>
+            </el-table>
+            <div class="pagination-section">
+                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="params.pageNo" background :page-size="params.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="totalCount">
+                </el-pagination>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+import TableHeight from "~/mixins/tableheight";
+import Search from "~/components/common/Search";
+import SearchResult from "~/components/common/SearchResult.vue";
+import MoreOperating from "~/components/common/MoreOperatingDelete";
+import Modal from "~/components/Modal";
+import { mapActions, mapState } from "vuex";
+
+export default {
+  props: { operationId: Number, flag: String },
+  name: "TagList",
+  mixins: [TableHeight],
+  components: {
+    Search,
+    SearchResult,
+    MoreOperating,
+    Modal
+  },
+  data() {
+    return {
+      tagList: [],
+      totalCount: 0,
+      showResetButton: false,
+      isShowSearchResult: false,
+      isClick: false,
+      params: {
+        pageSize: 10,
+        pageNo: 1,
+        tagName: ""
+      },
+      searchItemValueArray: [],
+            isClear: false,
+    };
+  },
+  watch: {
+      // flag: function(nval) {
+      //       console.log(nval,"222")
+      //       this.params.pageSize = 10;
+      //       this.params.pageNo = 1;
+      //       this.getReset();
+      //   },
+    operationId: function(nval) {
+      console.log(nval,"operationId");
+      this.params.pageNo = 1;
+      this.params.pageSize = 10;
+      this.refreshPage(this.params);
+    }
+  },
+  mounted() {
+    console.log(222);
+    this.refreshPage(this.params);
+    this.setTableHeight(275);
+  },
+  methods: {
+    ...mapActions([
+      "manageTagDelete",
+      "manageTagList",
+      "showPageLoading",
+      "hidePageLoading"
+    ]),
+
+    getReset() {
+      console.log(333);
+      this.showResetButton = false;
+      this.isShowSearchResult = false;
+      this.isClick = false;
+      this.params.tagName = "";
+      this.refreshPage(this.params);
+    },
+    getDeleteItem(index) {
+      this.searchItemValueArray.splice(index);
+      this.isClear = true;
+      this.params.tagName = "";
+      this.refreshPage(this.params);
+    },
+    refreshPage(nval) {
+      this.showPageLoading();
+      this.manageTagList(nval).then(resp => {
+        this.tagList = resp.result;
+        this.totalCount = resp.totalCount;
+        this.hidePageLoading();
+      });
+    },
+    //模糊查询
+    onSearchGood(searchValue) {
+      console.log(444);
+      this.params.tagName = searchValue;
+      this.isSearch = true;
+      this.isClear = false;
+            this.searchItemValueArray = [searchValue];
+      this.refreshPage(this.params);
+    },
+    searchEnterFun(e) {
+      console.log(555);
+      var keyCode = window.event ? e.keyCode : e.which;
+      //  console.log('回车搜索',keyCode,e);
+      if (keyCode == 13 && this.params.tagName) {
+        this.refreshPage(this.params);
+      } else {
+        this.refreshPage(this.params);
+      }
+    },
+    // 修改pagesize
+    handleSizeChange(nSize) {
+      console.log(666);
+      this.params.pageSize = nSize;
+      this.refreshPage(this.params);
+    },
+    // 修改页码
+    handleCurrentChange(nPage) {
+      console.log(777);
+      console.log(nPage);
+      this.params.pageNo = nPage;
+      this.refreshPage(this.params);
+    },
+    // 新增标签
+    submitCreatetag() {
+      this.$router.push(`/goods/setting/tagAdd`);
+    },
+    // 删除标签
+    deletetag(item, statu) {
+      let confirmType = `warning`;
+      let confirmText;
+      if (statu === 0) {
+        confirmText = `删除`;
+      }
+      this.$confirm(`确认${confirmText}选中的标签？`, `${confirmText}标签`, {
+        confirmButtonText: "确定",
+        type: confirmType
+      })
+        .then(() => {
+          // console.log(item.id)
+          this.manageTagDelete({ id: item.id }).then(res => {
+            console.log(res);
+            this.$message({
+              type: "success",
+              message: `${confirmText}标签成功`
+            });
+            this.refreshPage(this.params);
+          });
+        })
+        .catch(() => {});
+    }
+  }
+};
+</script>
+<style lang="scss">
+.goods-list {
+  .search-component {
+    right: 0px;
+  }
+  .search {
+    margin-top: 20px;
+  }
+  .table-wrapper {
+    overflow-y: hidden;
+    .row-btn-show div {
+      color: black;
+      cursor: default;
+    }
+  }
+  .handleButtonContainer {
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    border-radius: 50%;
+    background-color: #eceff1;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    margin-right: 10px;
+  }
+  .el-table th:first-child {
+    border-right: none;
+  }
+  .el-table th:nth-child(2) {
+    border-left: none;
+  }
+}
+
+.el-tooltip__popper.is-light {
+  background: #fff;
+  border: 1px solid #eee;
+}
+
+.el-tooltip__popper.is-light[x-placement^="bottom"] .popper__arrow {
+  border-bottom-color: #eee;
+}
+
+.el-input-group__prepend {
+  background-color: #fff;
+}
+
+.el-input-group--prepend .el-input__inner,
+.el-input-group__append {
+  border-left: 0px;
+  padding-left: 0;
+}
+
+.el-button + .el-button {
+  margin-left: 10px;
+}
+
+.iconColor {
+  color: black;
+}
+
+.showMoreColor {
+  cursor: pointer;
+  &:hover {
+    color: #3b8cff;
+  }
+}
+</style>

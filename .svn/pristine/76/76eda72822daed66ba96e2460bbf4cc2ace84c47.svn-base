@@ -1,0 +1,424 @@
+<template>
+    <div class="login-container">
+        <div class="login-container-box" @click="isActive=false">
+            <div class="login-header">
+                <div >
+                    <a href="javascript:void(0);" id="login_icon"></a>
+                </div>
+            </div>
+            <div class="login-center">
+                <div class="login-left-container">
+                    <img v-if="isShowBg===1" src="../layouts/images/login_center_text1.png"/>
+                    <img v-if="isShowBg===2" src="../layouts/images/login_center_text2.png"/>
+                </div>
+                <div class="login-box">
+                    <div>
+                        <h3>登 录</h3>
+                        <div class="show-error">
+                            <span v-if="showMsgInfo">
+                                <i class="icon-tishi"></i>
+                                账户或密码有误，请重新输入
+                            </span>
+                            <span v-if="showVerifyInfo">
+                                <i class="icon-tishi"></i>
+                                验证码有误，请重新输入
+                            </span>
+                        </div>
+                        <div class="login_form">
+                            <el-form :model="userForm" ref="userForm">
+                                <el-form-item>
+                                    <el-input v-model.trim="userForm.username"
+                                              placeholder="OA账号/NGOC外协账号"
+                                              auto-complete="off"
+                                              @keyup.enter.native="onLogin()"></el-input>
+                                </el-form-item>
+                                <el-form-item class="password-input">
+                                    <el-input :maxlength="20" type="password"
+                                              placeholder="登入密码"
+                                              v-model.trim="userForm.password"
+                                              auto-complete="off"
+                                              @keyup.native="checkCapitalKey"
+                                              @keypress.native="capitalKey"
+                                              @keyup.enter.native="onLogin()"></el-input>
+                                    <p v-if="isCapitalKeyOpen" class="capital-key-tips">大写锁定已开启</p>
+                                </el-form-item>
+                                <el-button @click="doLogin" :disabled="isDisable" :class="{disabled: isDisable}">登 录</el-button>
+                            </el-form>
+                            <div class="login-tips">
+                                <p>系统登录及其他问题请联系：</p>
+                                <p>电话：025-68737279 转 1</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="login-footer">
+                Copyright © 2018 咪咕TSG成都研发事业部
+            </div>
+        </div>
+        <div class="customer_service-icon">
+            <a class="customer_service" @click="showService"><i class="iconfont1 icon-kefu"></i></a>
+        </div>
+        <div class="customer_service-container" v-if="isActive">
+            <p class="login-customer_service_title">微信客服</p>
+            <div class="bnefit-box">
+                <p>问题反馈群</p>
+            </div>
+            <div class="phone-service">
+                <p >电话客服</p>
+                <p>025-68737279 转 1</p>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+import {mapActions} from 'vuex'
+import utils from "../utils/misc"
+import cookies from '../utils/cookies';
+import Api from '../utils/api';
+import MessageMixins from '~/mixins/messages';
+
+export default {
+    name: "NewLogin",
+    mixins: [MessageMixins],
+    data(){
+        return {
+            title: '',
+            flag: '',
+            userForm: {
+                username: '',
+                password: '',
+            },
+            isActive: false,  // 客服二维码 是否显示
+            isShowBg: 1,
+            styleObject: {    // 中间图片区域默认显示背景图片，ie兼容
+                background: 'url("../static/images/login_bg1.png") no-repeat',
+                backgroundSize: '100% 100%'
+            },
+            showMsgInfo: false,     // 登录用户名或密码错误，显示错误提示
+            showVerifyInfo: false,  // 登录验证码错误，显示错误提示
+            srcUrl: '',             // 验证码图片，base64格式
+            isCapitalKeyOpen: false,    // 输入密码框 大小写锁定 判断
+            isDisable: false,       // 登录按钮只能按一次
+        }
+    },
+    mounted() {
+        this.title = "NGOC销售管理系统";
+        this.flag = "每一门生意，都要用心经营";
+        this.isShowBg=Math.round(Math.random()+1);
+    },
+    methods: {
+        ...mapActions(["showPageLoading", "hidePageLoading", "login"]),
+        onLogin(){
+            if(!this.userForm.username){
+                this.$message({
+                    type: 'info',
+                    message: '请输入用户名'
+                })
+            }else if(!this.userForm.password){
+                this.$message({
+                    type: 'info',
+                    message: '请输入密码'
+                })
+            }else{
+                this.doLogin()
+            }
+        },
+        doLogin(){
+            this.isDisable = true;
+            this.showMsgInfo = false;
+            this.showVerifyInfo = false;
+            let pss = ""
+            // if(this.userForm.password == 'admin'){
+            //     pss = this.userForm.password
+            // }else{
+            //     pss =  utils.rsaEncrypt(this.userForm.password);
+            // }
+            // pss = this.userForm.password
+            pss =  utils.rsaEncrypt(this.userForm.password)
+            this.showPageLoading();
+            this.login({username: this.userForm.username, password: pss}).then( resp => {
+                console.log(resp, 111)
+                this.hidePageLoading();
+                if( resp && resp.sessionId && resp.groupId ) {
+                    sessionStorage.setItem('userAccount', this.userForm.username);
+                    sessionStorage.setItem('tabCaches',"[]");
+                    sessionStorage.setItem('userName', resp.uname);
+                    sessionStorage.setItem('userId', resp.uid);
+                    sessionStorage.setItem('ng', resp.sessionId);
+                    sessionStorage.setItem('entityId', resp.groupId);
+                    sessionStorage.setItem('entityName', resp.groupName);
+                    sessionStorage.setItem('utype', resp.utype);
+                    cookies.setCookie('ng',resp.sessionId,1);
+                    localStorage.setItem('menuList',JSON.stringify(resp.menuLists));
+
+                    if(resp.utype == '1') {   // 系统管理员
+                        setTimeout(() => {
+                            this.$router.push('/system/entity')
+                            this.hidePageLoading()
+                            this.isDisable = false;
+                        }, 100)
+                    } else {                  // 2普通用户
+                        setTimeout(() => {
+                            this.$router.push('/index/home')
+                            this.hidePageLoading();
+                            this.isDisable = false;
+                        }, 100)
+                    }
+                } else if (!resp.groupId) {
+                    this.showError('没有操作权限，请联系系统管理员！');
+                    this.hidePageLoading();
+                    this.isDisable = false;
+                } else {
+                    this.showError('登录失败，请重新登录！');
+                    this.hidePageLoading();
+                    this.isDisable = false;
+                }
+            }).catch(e => {
+                this.showError('登录失败，请重新登录！');
+                if (e.code == 1204) {
+                    this.showVerifyInfo = true;
+                } else if (e.code == 1000 || e.code === 1015) {
+                    this.showMsgInfo = true;
+                }
+                this.isDisable = false;
+            });
+        },
+        changPin () {
+            Api.getLoginImage({dataType: {responseType: 'blob'}}).then(res => {
+                let url = this.arrayBufferToBase64(res.data);
+                sessionStorage.setItem('ng', res.headers.sessionid);
+                this.srcUrl = `data:image/jpeg;base64,${url}`;
+            }).catch(e => {
+
+            });
+        },
+        arrayBufferToBase64 (buffer) {
+            let binary = '';
+            let bytes = new Uint8Array(buffer);
+            let len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        },
+        showService(){
+            this.isActive=!this.isActive;
+        },
+        capitalKey () {
+            let e = window.event;
+            let valueCapsLock = e.keyCode ? e.keyCode : e.which; // 按键
+            let valueShift = e.shiftKey ? e.shiftKey : ((valueCapsLock == 16) ? 1 : 0); // shift键是否按住
+            // if的前一个条件 输入了大写字母，并且shift键没有按住，说明Caps Lock打开
+            if (((valueCapsLock >= 65 && valueCapsLock <= 90) && !valueShift) || ((valueCapsLock >= 97 && valueCapsLock <= 122) && valueShift)) { // 输入了小写字母，并且按住 shift键，说明Caps Lock打开
+                this.isCapitalKeyOpen = true;
+            } else {
+                this.isCapitalKeyOpen = false;
+            }
+        },
+        checkCapitalKey () {
+            let e = window.event;
+            if (e.keyCode == 20) {
+                this.isCapitalKeyOpen = !this.isCapitalKeyOpen;
+            }
+        }
+    }
+}
+</script>
+
+<style lang="scss">
+    .login-container{
+        background-color: #fff;
+        box-sizing: border-box;
+        height: 100%;
+        .login-container-box{
+            height: 100%;
+        }
+        .customer_service-icon{
+            position: absolute;
+            height: 70px;
+            padding-right: 60px;
+            width: auto;
+            top:0px;
+            z-index:998;
+            right:0px;
+            display: flex;
+            align-items:center;
+            .customer_service{
+                width: 28px;
+                height: 28px;
+                i{
+                    font-size: 28px;
+                    color: #333333;
+
+                }
+            }
+        }
+        .login-header{
+            height: 70px;
+            width: 100%;
+            display: flex;
+            justify-content:space-between;
+            div{
+                display: flex;
+                align-items:center;
+                #login_icon{
+                    width: 91px;
+                    height: 32px;
+                    background: url("../layouts/images/login_icon.png");
+                    background-size: 100% 100%;
+                }
+            }
+            div:nth-child(1){
+                padding-left: 60px;
+            }
+            div:nth-last-child(1){
+                padding-right: 61px;
+                justify-content:flex-end;
+            }
+
+        }
+        .login-center{
+            position: relative;
+            width: 100%;
+            height: calc(100% - 150px);
+            background: url("../layouts/images/login_center_bg.png");
+            background-size: 100% 100%;
+            display: flex;
+            align-items: center;
+            .login-left-container{
+                position: absolute;
+                width: auto;
+                height: 83%;
+                left: 11%;
+                    img{
+                        width: auto;
+                        height: 100%;
+                    }
+            }
+
+            .login-box{
+                position: absolute;
+                right:120px;
+                /*top:13.4%;*/
+                height: 358px;
+                width: 350px;
+                border: 1px solid #E6E6E6;
+                border-radius: 4px;
+                background-color: #ffffff;
+                    h3{
+                        font-size: 20px;
+                        color: #000000;
+                        line-height: 20px;
+                        text-align: center;
+                        padding: 30px 0px 30px;
+                        font-weight: normal;
+                    }
+                .login_form{
+                    padding: 0px 30px;
+                    .el-form-item{
+                        margin-bottom: 20px;
+                        .el-input{
+                            height: 40px;
+                            font-size: 12px;
+                            input{
+                                color: #666666;
+                                &:focus{
+                                    border-color: #3B8CFF;
+                                }
+                                border-radius: 2px;
+                            }
+                            input:-webkit-autofill{
+                                -webkit-box-shadow: 0 0 0px 1000px white inset;
+                                -webkit-text-fill-color: #666666;
+                            }
+                        }
+                    }
+                    .capital-key-tips {
+                        position: absolute;
+                        top: 42px;
+                        left: 0px;
+                        height: 12px;
+                        font-size: 12px;
+                        color: rgba(59, 140, 255, 1);
+                        line-height: 12px;
+                    }
+                    .el-button{
+                        width: 290px;
+                        text-align: center;
+                        font-size: 14px;
+                        color: #FFFFFF;
+                        background: #3B8CFF;
+                        border-radius: 2px;
+                        border:none;
+                    }
+                }
+                .login-tips{
+                    padding: 30px 0px 30px;
+                    p{
+                        font-size: 12px;
+                        color: #999999;
+                        line-height: 12px;
+                    }
+                    p:nth-child(1){
+                        padding: 20px 0px 12px;
+                        border-top:1px solid #F3F3F3;
+                    }
+                }
+            }
+        }
+        .login-footer{
+            height: 80px;
+            line-height: 80px;
+            font-size: 12px;
+            color: #999999;
+            text-align: center;
+        }
+        .customer_service-container{
+            background: #FFFFFF;
+            box-shadow: 0 6px 6px 0 rgba(0,0,0,0.1);
+            width: 260px;
+            height: 265px;
+            padding: 24px 20px;
+            position: absolute;
+            top:70px;
+            right: 60px;
+            .login-customer_service_title{
+                background: url("../layouts/images/weixin_customer.png") no-repeat;
+                background-size:20px  100%;
+                width: 100%;
+                height: 20px;
+                font-size: 14px;
+                color: #333333;
+                line-height: 20px;
+                padding-left: 32px;
+            }
+            .bnefit-box{
+                padding: 111px 0px 27px;
+                background: url("../layouts/images/eriweima.jpg") no-repeat center 24px ;
+                background-size: 80px 80px;
+                p{
+                    font-size: 12px;
+                    color: #3C3C3C;
+                    text-align: center;
+                }
+            }
+            .phone-service{
+                width: 100%;
+                padding-left: 33px;
+                background: url("../layouts/images/phone_customer.png") no-repeat 0px  10px ;
+                background-size: 24px 24px;
+                p:nth-child(1){
+                    font-size: 14px;
+                    color: #333333;
+                    margin-bottom: 5px;
+                }
+                p:nth-child(2){
+                    font-size: 12px;
+                    color: #FF8D09;
+                }
+            }
+        }
+    }
+</style>
