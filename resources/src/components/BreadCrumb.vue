@@ -3,7 +3,7 @@
     <el-col :span="22">
        <el-breadcrumb separator=">">
             <el-breadcrumb-item>商品</el-breadcrumb-item>
-            <el-breadcrumb-item  v-for='item,index in crumbs' :key='index'
+            <el-breadcrumb-item  v-for='(item,index) in crumbs' :key='index'
                 :to="{ path: item.path }">
                 {{item.name}}
             </el-breadcrumb-item>
